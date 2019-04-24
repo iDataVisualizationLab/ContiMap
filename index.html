@@ -23,8 +23,8 @@
         donePreprocess, doneResampling, doneSimilarityCalc, doneOrdering, doneDrawing;
 
     // d3.json('data/alibaba60s.json').then(data => {
-    // d3.json('data/albbcpu1200s.json').then(data => {
-    d3.json('data/albbcpu2400s.json').then(data => {
+    d3.json('data/albbcpu1200s.json').then(data => {
+    // d3.json('data/albbcpu2400s.json').then(data => {
         //Remove _id field
         data.forEach(d => delete d['_id']);
         //Sort the data by time_stamp
@@ -146,7 +146,7 @@
                     smoothing: 0.5,
                     color: 'rgba(0, 0, 0,0)'
                 }
-                drawContour('contourDiv', [contourData], 1200, orders.length);
+                drawContour('contourDiv', [contourData], width, height);
                 //Done drawing
                 doneDrawing = new Date();
                 console.log('Done drawing: ' + (doneDrawing - doneOrdering) + 'ms');
