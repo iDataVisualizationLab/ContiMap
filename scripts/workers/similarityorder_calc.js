@@ -9,7 +9,7 @@ function maximumPath(machines, links) {
 
     //Initialize node degree (node degree must be <=1).
     let degreeCount = {};
-    for (let i = 0; i < numberOfMachines; i++) {
+    for (let i = 0; i < numberOfMachines; ++i) {
         degreeCount[machines[i]] = 0;//We haven't added.
     }
     let sequence = [];
@@ -26,12 +26,12 @@ function maximumPath(machines, links) {
     let rightExpand = undefined;
     while (true) {
         //Only calculate left expand value if it is negative infinity
-        if(leftExpandValue === Number.NEGATIVE_INFINITY){
+        if (leftExpandValue === Number.NEGATIVE_INFINITY) {
             leftExpand = links.find(//Take the first element only since this is the highest
                 l => !l.visited //must not be visited
                     && (
-                        (l.source === left && sequence.indexOf(l.target)<0) //continue from left as source and target is not in the sequence to avoid circle
-                        || (l.target === left && sequence.indexOf(l.source)<0) //continue from left as target and source is not in the sequence to avoid circle
+                        (l.source === left && sequence.indexOf(l.target) < 0) //continue from left as source and target is not in the sequence to avoid circle
+                        || (l.target === left && sequence.indexOf(l.source) < 0) //continue from left as target and source is not in the sequence to avoid circle
                     ));
             if (leftExpand) {//If it is possible to expand on the left, check the weight of the first one (the one on top will be the highest one)
                 leftExpandValue = leftExpand.weight;
@@ -39,12 +39,12 @@ function maximumPath(machines, links) {
         }
 
         //Only calculate right expand value if it is negative infinity
-        if(rightExpandValue === Number.NEGATIVE_INFINITY){
+        if (rightExpandValue === Number.NEGATIVE_INFINITY) {
             rightExpand = links.find(
                 l => !l.visited //must not be visited
                     && (
-                        (l.source === right && sequence.indexOf(l.target)<0) //continue from right as source and target is not in the sequence to avoid circle
-                        || (l.target === right && sequence.indexOf(l.source)<0) //continue from right as target and source is not in the sequence to avoid circle
+                        (l.source === right && sequence.indexOf(l.target) < 0) //continue from right as source and target is not in the sequence to avoid circle
+                        || (l.target === right && sequence.indexOf(l.source) < 0) //continue from right as target and source is not in the sequence to avoid circle
                     ));
             if (rightExpand) {//If it is possible to expand on the right, check the weight of the first one (the one on top will be the highest one)
                 rightExpandValue = rightExpand.weight;

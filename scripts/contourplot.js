@@ -1,4 +1,20 @@
-function plotContoursFromData(group, grid, colorFunction) {
+function plotContour(theDiv, data, width, height) {
+    var layout = {
+        autosize: false,
+        width: width,
+        height: height,
+        margin: {
+            l: 0,
+            r: 0,
+            b: 0,
+            t: 0,
+            pad: 0
+        },
+    };
+
+    Plotly.newPlot(theDiv, data, layout);
+}
+function plotContoursFromData(theDiv, data) {
     let gridData = grid.map(g => g.value);
     let thresholds = processThresholds(d3.extent(gridData));
     let g = group.append("g");
