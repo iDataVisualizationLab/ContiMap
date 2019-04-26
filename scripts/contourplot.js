@@ -3,6 +3,7 @@ function plotContour(theDiv, data, width, height) {
     let colors = data.colors;
     let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
     let contours = d3.contours().thresholds(thresholds).size([data.z[0].length, data.z.length]).smooth(false)(data.z.flat());
+
     debugger
     function scale(scaleX, scaleY) {
         return d3.geoTransform({

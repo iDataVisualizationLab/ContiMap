@@ -41,7 +41,7 @@
         // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 50).map(m => m.key);
         // //Filter the data
         // data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
-        debugger
+
         //Sort the data by time_stamp
         data.sort((a, b) => a[FIELD_TIME_STAMP] - b[FIELD_TIME_STAMP]);
         const timeSteps = Array.from(new Set(data.map(d => d[FIELD_TIME_STAMP])));
@@ -161,10 +161,10 @@
                 // let thresholds= [10e-3, 40, 60, 80, 90],
                 //     let colors= ['#455bdc', '#9faad3', '#e39968', '#c53c33', '#b20a1c'];
                 //HPCC thresholds and colors
-                debugger
+
                 // let thresholds = [10e-3, 20, 40, 60, 70, 80, 90];
                 // let colors = ['#110066', '#4400ff', '#00cccc', '#00dd00', '#ffcc44', '#ff0000', '#660000'];
-                let thresholds = [0, 40, 60, 80, 90, 100];
+                let thresholds = [0 ,10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
                 let colors = thresholds.map(v => d3.interpolateReds(v / 100));
 
                 let contourData = {
