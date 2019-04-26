@@ -7,7 +7,6 @@ function maximumPath(machines, links) {
     //Order the weights by descending order.
     links.sort((a, b) => b.weight - a.weight);
 
-    debugger
     //Initialize node degree (node degree must be <=1).
     let degreeCount = {};
     for (let i = 0; i < numberOfMachines; ++i) {
@@ -52,17 +51,7 @@ function maximumPath(machines, links) {
                 rightExpandValue = rightExpand.weight;
             }
         }
-        // if(
-        //     leftExpand.source === 'compute-2-35' || rightExpand.source === 'compute-2-35' ||
-        //     leftExpand.target === 'compute-2-35' || rightExpand.target === 'compute-2-35'
-        //
-        // ){
-        //     debugger
-        // }
-        //TODO: If cannot find any => both sides are NEGATIVE MIN INTEGER => Then we need to have a way to move next
-        if(leftExpandValue===Number.NEGATIVE_INFINITY && rightExpandValue === Number.NEGATIVE_INFINITY){
-            debugger
-        }
+
         //Choose the expansion direction (left or right, with higher weight).
         if (leftExpandValue > rightExpandValue) {
             //Expand on the left
@@ -89,14 +78,7 @@ function maximumPath(machines, links) {
             //We expanded on the right so we need to set its expanded value to negative infinity to trigger recalculation of right expand
             rightExpandValue = Number.NEGATIVE_INFINITY;
         }
-        let obj = {}
-        sequence.forEach(m=>obj[m] = (obj[m]?obj[m]:0) + 1);
 
-        let x = Object.keys(obj).map(k=>[k, obj[k]]);
-        x = x.filter(d=>d[1]===2);
-        if(x.length>0){
-            debugger
-        }
         //If all nodes are put then finish
         if (sequence.length === machines.length) {
             return sequence;
