@@ -1,11 +1,4 @@
-/**
- * Build the maximum path
- * @param data will have the format as [{'source': source, 'target': target, 'weight': similarity }, {}]
- */
-function maximumPath(machines, links) {
-    //Order the weights by descending order.
-    links.sort((a, b) => b.weight - a.weight);
-
+function twoWayOrdering(links, machines) {
     let sequence = [];
     let topLink = links[0];
     let left = topLink.source;
@@ -19,7 +12,6 @@ function maximumPath(machines, links) {
     let leftExpand = undefined;
     let rightExpand = undefined;
     while (true) {
-
         //TODO: Only calculate left expand value if it is negative infinity or the sequence already contains either source or target
         if (leftExpandValue === Number.NEGATIVE_INFINITY || sequence.indexOf(leftExpand.source) >= 0 || sequence.indexOf(leftExpand.target) >= 0) {
             leftExpand = links.find(//Take the first element only since this is the highest
@@ -75,7 +67,53 @@ function maximumPath(machines, links) {
 
         //If all nodes are put then finish
         if (sequence.length === machines.length) {
-            return sequence;
+            break;
         }
     }
+    return sequence;
+}
+function oneWayOrdering(links, machines) {
+    let sequence = [];
+    let topLink = links[0];
+    sequence.push(topLink.source);
+    sequence.push(topLink.target);
+    //Todo: May drop this for better performance, in that case we need to copy the links to avoid modifying it.
+    let prev = topLink.target;
+    let expand;
+    topLink.visited = true;
+    while (true) {
+        expand = links.find(l =>
+            !l.visited && (
+                (l.source === prev && sequence.indexOf(l.target) < 0) ||
+                (l.target === prev && sequence.indexOf(l.source) < 0)
+            )
+        );
+        if(!expand){
+            debugger
+        }
+        expand.visited = true;
+        if(expand.source === prev){
+            sequence.push(expand.target);
+            prev = expand.target;
+        }else if(expand.target === prev){
+            sequence.push(expand.source);
+            prev = expand.source;
+        }
+        //If all nodes are put then finish
+        if (sequence.length === machines.length) {
+            break;
+        }
+    }
+    return sequence;
+}
+/**
+ * Build the maximum path
+ * @param data will have the format as [{'source': source, 'target': target, 'weight': similarity }, {}]
+ */
+function maximumPath(machines, links) {
+    //Order the weights by descending order.
+    links.sort((a, b) => b.weight - a.weight);
+    // let sequence = twoWayOrdering(links, machines);
+    let sequence = oneWayOrdering(links, machines);
+    return sequence;
 }
