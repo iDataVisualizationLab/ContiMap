@@ -3,15 +3,9 @@
  * @param data will have the format as [{'source': source, 'target': target, 'weight': similarity }, {}]
  */
 function maximumPath(machines, links) {
-    let numberOfMachines = machines.length;
     //Order the weights by descending order.
     links.sort((a, b) => b.weight - a.weight);
 
-    //Initialize node degree (node degree must be <=1).
-    let degreeCount = {};
-    for (let i = 0; i < numberOfMachines; ++i) {
-        degreeCount[machines[i]] = 0;//We haven't added.
-    }
     let sequence = [];
     let topLink = links[0];
     let left = topLink.source;
