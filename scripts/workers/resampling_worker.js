@@ -1,3 +1,4 @@
+const theVar = 'CPU1 Temp';
 onmessage = function(e){
     let timeSteps = e.data.timeSteps;
     let part = e.data.part;
@@ -8,7 +9,7 @@ onmessage = function(e){
             if(!theStep){
                 theStep = Object.assign({}, machineTimeSeries[0]);
                 theStep.time_stamp = step;
-                theStep.cpu_util_percent = null;
+                theStep[theVar] = undefined;
             }
             return theStep;
         });

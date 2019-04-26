@@ -5,7 +5,6 @@
     <script src="lib/d3.js"></script>
     <script src="lib/underscore.js"></script>
     <script src="lib/simple-statistics.min.js"></script>
-    <script src="lib/plotly-latest.min.js"></script>
     <script src="scripts/constants.js"></script>
     <script src="scripts/workers/webworker.js"></script>
     <script src="scripts/workers/similarityorder_calc.js"></script>
@@ -15,6 +14,7 @@
 <body>
 <div id="contourDiv"></div>
 <script>
+    const theVar = 'CPU1 Temp';
     let width = window.innerWidth;
     let height = window.innerHeight;
     document.getElementById('contourDiv').style.width = width;
@@ -23,21 +23,25 @@
     let startTime = new Date(),
         donePreprocess, doneResampling, doneSimilarityCalc, doneOrdering, doneDrawing;
 
-    d3.json('data/albbcpu1200s.json').then(data => {
+    // d3.json('data/albbcpu1200s.json').then(data => {
     // d3.json('data/albbcpu2400s.json').then(data => {
-        //Remove _id field
-        data.forEach(d => delete d['_id']);
+    // //Remove _id field
+    // data.forEach(d => delete d['_id']);
+    // d3.json('data/HPCC_04Oct2018.json').then(data => {
+    // d3.json('data/HPCC_21Mar2019.json').then(data => {
+    // d3.json('data/HPCC_21Mar2019210.json').then(data => {
+    d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
         const nestedByMachines = d3.nest().key(d => d[FIELD_MACHINE_ID]).entries(data);
-
         //Calculate the max cpu usage
         nestedByMachines.forEach(mc => {
-            mc.values.max_cpu_util_percent = d3.max(mc.values.map(d => d[FIELD_CPU_UTIL_PERCENT]));
+            mc.values.max_cpu_util_percent = d3.max(mc.values.map(d => d[theVar]));
         });
-        let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 50).map(m => m.key);
 
-        //Filter the data
-        data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
-
+        // //TODO: Only filter in case of alibaba
+        // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 50).map(m => m.key);
+        // //Filter the data
+        // data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
+        debugger
         //Sort the data by time_stamp
         data.sort((a, b) => a[FIELD_TIME_STAMP] - b[FIELD_TIME_STAMP]);
         const timeSteps = Array.from(new Set(data.map(d => d[FIELD_TIME_STAMP])));
@@ -150,46 +154,26 @@
                 let y = orders;
                 let z = [];
                 orders.forEach(machine => {
-                    z.push(machineTimeObject[machine].map(st => st[FIELD_CPU_UTIL_PERCENT]));
+                    z.push(machineTimeObject[machine].map(st => st[theVar]));
                 });
-                // let colorScale = [[0, '#050aac'], [0.2, '#455bdc'], [0.4, '#9faad3'], [0.6, '#e39968'], [0.8, '#c53c33'], [1.0, '#b20a1c']];
-                // let colorScale = [
-                //     [0, '#050aac'], [0.2, '#050aac'],
-                //     [0.2, '#455bdc'],[0.4, '#455bdc'],
-                //     [0.4, '#9faad3'],[0.6, '#9faad3'],
-                //     [0.6, '#e39968'],[0.8, '#e39968'],
-                //     [0.8, '#c53c33'],[0.9, '#c53c33'],
-                //     [0.9, '#b20a1c'], [1.0, '#b20a1c']
-                // ];
 
-                let colorScale = [
-                    [0, '#455bdc'], [0.4, '#455bdc'],
-                    [0.4, '#9faad3'], [0.6, '#9faad3'],
-                    [0.6, '#e39968'], [0.8, '#e39968'],
-                    [0.8, '#c53c33'], [0.9, '#c53c33'],
-                    [0.9, '#b20a1c'], [1.0, '#b20a1c']
-                ];
+                //Alibaba thresholds and colors
+                // let thresholds= [10e-3, 40, 60, 80, 90],
+                //     let colors= ['#455bdc', '#9faad3', '#e39968', '#c53c33', '#b20a1c'];
+                //HPCC thresholds and colors
+                debugger
+                let thresholds = [10e-3, 20, 40, 60, 70, 80, 90];
+                let colors = ['#110066', '#4400ff', '#00cccc', '#00dd00', '#ffcc44', '#ff0000', '#660000'];
 
                 let contourData = {
                     x: x,
                     y: y,
                     z: z,
-                    type: 'contour',
-                    line: {
-                        smoothing: 0.5,
-                        color: 'rgba(0, 0, 0,0)'
-                    },
-                    showscale: true,
-                    colorscale: colorScale,
-                    colorbar: {
-                        tickfont: {
-                            color: 'black'
-                        }
-                    },
-                    connectgaps: false
+                    thresholds: thresholds,
+                    colors: colors
                 };
 
-                plotContour('contourDiv', [contourData], width, height);
+                plotContour('contourDiv', contourData, width, height);
                 //Done drawing
                 doneDrawing = new Date();
                 console.log('Done drawing: ' + (doneDrawing - doneOrdering) + 'ms');
