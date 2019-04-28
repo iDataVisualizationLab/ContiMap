@@ -12,16 +12,26 @@
     <title>Alibaba</title>
 </head>
 <body>
-<div id="contourDiv"></div>
+<div id="contourDiv0"></div>
+<div id="contourDiv1"></div>
+<div id="contourDiv2"></div>
 <script>
     const theVar = 'CPU1 Temp';
     let width = window.innerWidth;
     let height = window.innerHeight;
-    document.getElementById('contourDiv').style.width = width;
-    document.getElementById('contourDiv').style.height = height;
+    VARIABLES.map((v, i) => {
+        document.getElementById('contourDiv' + i).style.width = width;
+        document.getElementById('contourDiv' + i).style.height = height;
+    });
+
+    const colorSchemes = {
+        "CPU1 Temp": d3.interpolateReds,
+        "Fan1 speed": d3.interpolateBlues,
+        "Power consumption": d3.interpolateGreens
+    };
     //Time records
     let startTime = new Date(),
-        donePreprocess, doneResampling, doneSimilarityCalc, doneOrdering, doneDrawing;
+        donePreprocess, doneResampling, doneSimilarityCalc, doneOrdering;
 
     // d3.json('data/albbcpu1200s.json').then(data => {
     // d3.json('data/albbcpu2400s.json').then(data => {
@@ -124,62 +134,86 @@
             });
 
             function onSimilarityResult(evt) {
+
                 similarityResultCounter += 1;
                 similarityResults = similarityResults.concat(evt);
                 if (similarityResultCounter === similarityParts.length) {
+                    debugger
                     resetWorkers();
                     onCompleteSimilarityCal(similarityResults);
+
                     doneSimilarityCalc = new Date();
                     console.log('Done similarity calculation: ' + (doneSimilarityCalc - doneResampling) + 'ms');
                 }
             }
 
             function onCompleteSimilarityCal(similarityResults) {
-                //Build the best order.
-                startWorker('scripts/workers/similarityorder_worker.js', {
-                    machines: machines,
-                    links: similarityResults
-                }, onOrderResult, 0);
-            }
-
-            function onOrderResult(orders) {
-                //Done ordering
-                doneOrdering = new Date();
-                console.log('Done ordering: ' + (doneOrdering - doneSimilarityCalc) + 'ms');
-                resetWorkers();
-                //Resetting the size
-                document.getElementById('contourDiv').style.height = orders.length
-                //Building the data
-                let x = timeSteps;
-                let y = orders;
-                let z = [];
-                orders.forEach(machine => {
-                    z.push(machineTimeObject[machine].map(st => st[theVar]));
+                let orderParts = VARIABLES.map((theVar) => {
+                    return similarityResults.map(similarity => {
+                        return {
+                            source: similarity.source,
+                            target: similarity.target,
+                            weight: similarity.weights[theVar]
+                        }
+                    });
                 });
+                orderParts.forEach((part, i) => {
+                    //Build the best order.
+                    startWorker('scripts/workers/similarityorder_worker.js', {
+                        theVar: VARIABLES[i],
+                        machines: machines,
+                        links: part
+                    }, onOrderResult, i);
+                });
+                let orderingResultCounter = 0;
 
-                //Alibaba thresholds and colors
-                // let thresholds= [10e-3, 40, 60, 80, 90],
-                //     let colors= ['#455bdc', '#9faad3', '#e39968', '#c53c33', '#b20a1c'];
-                //HPCC thresholds and colors
+                function onOrderResult(orderResults) {
 
-                // let thresholds = [10e-3, 20, 40, 60, 70, 80, 90];
-                // let colors = ['#110066', '#4400ff', '#00cccc', '#00dd00', '#ffcc44', '#ff0000', '#660000'];
-                let thresholds = [0 ,10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-                let colors = thresholds.map(v => d3.interpolateReds(v / 100));
+                    orderingResultCounter += 1;
+                    if (orderingResultCounter === orderParts.length) {
+                        doneOrdering = new Date();
+                        console.log('Done ordering: ' + (doneOrdering - doneSimilarityCalc) + 'ms');
+                        resetWorkers();
+                    }
+                    let theVar = orderResults.variable;
 
-                let contourData = {
-                    x: x,
-                    y: y,
-                    z: z,
-                    thresholds: thresholds,
-                    colors: colors
-                };
+                    let startDrawing = new Date();
+                    let theDiv = 'contourDiv' + VARIABLES.indexOf(theVar);
+                    let order = orderResults.order;
+                    //Resetting the size
+                    document.getElementById(theDiv).style.height = order.length
+                    //Building the data
+                    let x = timeSteps;
+                    let y = order;
+                    let z = [];
+                    order.forEach(machine => {
+                        z.push(machineTimeObject[machine].map(st => st[theVar]));
+                    });
+                    let flatZ = z.flat();
+                    // let min = d3.mean(flatZ);
+                    let min = d3.min(flatZ);
+                    let max = d3.max(flatZ);
+                    let numOfRanges = 5;
+                    let range = (max - min) / numOfRanges;
+                    let thresholds = [];
+                    for (let i = 0; i < numOfRanges; i++) {
+                        thresholds.push(min + i * range);
+                    }
+                    let colors = thresholds.map(v => colorSchemes[theVar](v / max));
+                    let contourData = {
+                        x: x,
+                        y: y,
+                        z: z,
+                        thresholds: thresholds,
+                        colors: colors
+                    };
 
-                plotContour('contourDiv', contourData, width, height);
-                //Done drawing
-                doneDrawing = new Date();
-                console.log('Done drawing: ' + (doneDrawing - doneOrdering) + 'ms');
+                    plotContour(theDiv, contourData, width, height);
+                    let doneDrawing = new Date();
+                    console.log('Done drawing: ' + (doneDrawing - startDrawing) + 'ms');
+                }
             }
+
         }
     });
 </script>

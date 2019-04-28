@@ -1,4 +1,4 @@
-const theVar = 'CPU1 Temp';
+importScripts('../constants.js');
 importScripts('../../lib/simple-statistics.min.js');
 importScripts('similarity_calc.js');
 onmessage = function(e){
@@ -7,12 +7,16 @@ onmessage = function(e){
     part.forEach(sd=>{
         let x1 = sd.x1;
         let x2 = sd.x2;
-        let source = x1[0].machine_id;
-        let target = x2[0].machine_id;
-        x1 = x1.map(d=>d[theVar]);
-        x2 = x2.map(d=>d[theVar]);
-        let similarity = rSquared(x1, x2);
-        results.push({'source': source, 'target': target, 'weight': similarity });
+        let source = x1[0][FIELD_MACHINE_ID];
+        let target = x2[0][FIELD_MACHINE_ID];
+        let similarities = {}
+        VARIABLES.forEach(theVar=>{
+            let x = x1.map(d=>d[theVar]);
+            let y = x2.map(d=>d[theVar]);
+            let similarity = rSquared(x, y);
+            similarities[theVar] = similarity;
+        });
+        results.push({'source': source, 'target': target, 'weights': similarities });
     });
     postMessage(results);
 }

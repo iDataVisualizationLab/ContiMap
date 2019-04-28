@@ -1,5 +1,8 @@
 importScripts("similarityorder_calc.js");
 onmessage = function(e){
-    let results = maximumPath(e.data.machines, e.data.links);
+    let results = {
+        variable: e.data.theVar,
+        order: maximumPath(e.data.machines, e.data.links)
+    };
     postMessage(results);
 }

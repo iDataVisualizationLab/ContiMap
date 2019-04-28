@@ -88,9 +88,6 @@ function oneWayOrdering(links, machines) {
                 (l.target === prev && sequence.indexOf(l.source) < 0)
             )
         );
-        if(!expand){
-            debugger
-        }
         expand.visited = true;
         if(expand.source === prev){
             sequence.push(expand.target);

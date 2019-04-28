@@ -1,15 +1,17 @@
-const theVar = 'CPU1 Temp';
+importScripts('../constants.js');
 onmessage = function(e){
     let timeSteps = e.data.timeSteps;
     let part = e.data.part;
     let results = [];
     part.forEach(machineTimeSeries=>{
         let result = timeSteps.map((step)=>{
-            let theStep = machineTimeSeries.find(d=>d.time_stamp===step);
+            let theStep = machineTimeSeries.find(d=>d[FIELD_TIME_STAMP]===step);
             if(!theStep){
                 theStep = Object.assign({}, machineTimeSeries[0]);
-                theStep.time_stamp = step;
-                theStep[theVar] = undefined;
+                theStep[FIELD_TIME_STAMP] = step;
+                VARIABLES.forEach(theVar=>{
+                    theStep[theVar] = undefined;
+                });
             }
             return theStep;
         });
