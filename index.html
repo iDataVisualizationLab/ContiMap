@@ -190,8 +190,8 @@
                         z.push(machineTimeObject[machine].map(st => st[theVar]));
                     });
                     let flatZ = z.flat();
-                    // let min = d3.mean(flatZ);
-                    let min = d3.min(flatZ);
+                    let min = d3.mean(flatZ);
+                    // let min = d3.min(flatZ);
                     let max = d3.max(flatZ);
                     let numOfRanges = 5;
                     let range = (max - min) / numOfRanges;
