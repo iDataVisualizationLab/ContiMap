@@ -110,7 +110,7 @@ function oneWayOrdering(links, machines) {
 function maximumPath(machines, links) {
     //Order the weights by descending order.
     links.sort((a, b) => b.weight - a.weight);
-    // let sequence = twoWayOrdering(links, machines);
-    let sequence = oneWayOrdering(links, machines);
+    let sequence = twoWayOrdering(links, machines);
+    // let sequence = oneWayOrdering(links, machines);
     return sequence;
 }
