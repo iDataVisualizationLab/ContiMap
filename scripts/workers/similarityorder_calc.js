@@ -5,10 +5,15 @@
 function maximumPath(machines, links) {
     //Order the weights by descending order.
     links.sort((a, b) => b.weight - a.weight);
-    // let sequence = twoWayOrdering(links, machines);
-    let sequence = oneWayOrdering(links, machines);
+    let sequence;
+    if (oneWay) {
+        sequence = oneWayOrdering(links, machines);
+    } else {
+        sequence = twoWayOrdering(links, machines);
+    }
     return sequence;
 }
+
 function twoWayOrdering(links, machines) {
     let sequence = [];
     let topLink = links[0];
@@ -83,6 +88,7 @@ function twoWayOrdering(links, machines) {
     }
     return sequence;
 }
+
 function oneWayOrdering(links, machines) {
     let sequence = [];
     let topLink = links[0];
@@ -100,10 +106,10 @@ function oneWayOrdering(links, machines) {
             )
         );
         expand.visited = true;
-        if(expand.source === prev){
+        if (expand.source === prev) {
             sequence.push(expand.target);
             prev = expand.target;
-        }else if(expand.target === prev){
+        } else if (expand.target === prev) {
             sequence.push(expand.source);
             prev = expand.source;
         }

@@ -2,9 +2,8 @@ function plotContour(theDiv, data, width, height) {
     let thresholds = data.thresholds;
     let colors = data.colors;
     let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
-    let contours = d3.contours().thresholds(thresholds).size([data.z[0].length, data.z.length]).smooth(false)(data.z.flat());
+    let contours = d3.contours().thresholds(thresholds).size([data.z[0].length, data.z.length]).smooth(smooth)(data.z.flat());
 
-    debugger
     function scale(scaleX, scaleY) {
         return d3.geoTransform({
             point: function (x, y) {
@@ -14,8 +13,6 @@ function plotContour(theDiv, data, width, height) {
     }
     let scaleX = width / data.z[0].length;
     let scaleY = height / data.z.length;
-    // let scaleX = 1;
-    // let scaleY = 1;
     //Buidling the path
     var path = d3.geoPath().projection(scale(scaleX, scaleY, width, height));
 

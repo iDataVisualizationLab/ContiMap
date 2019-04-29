@@ -12,6 +12,7 @@
     <title>Alibaba</title>
 </head>
 <body>
+<div id="infoDiv"></div>
 <div id="contourDiv0"></div>
 <div id="contourDiv1"></div>
 <div id="contourDiv2"></div>
@@ -23,8 +24,16 @@
     const colorSchemes = {
         "CPU1 Temp": d3.interpolateReds,
         "Fan1 speed": d3.interpolateBlues,
-        "Power consumption": d3.interpolateGreens
+        "Power consumption": d3.interpolateGreens,
+        "cpu_util_percent": d3.interpolateReds
     };
+    //Info div
+    let infoDiv = document.getElementById('infoDiv');
+    infoDiv.innerHTML = 'configuration';
+    addInfo(infoDiv, 'removeNull', removeNull);
+    addInfo(infoDiv, 'oneWay', oneWay);
+    addInfo(infoDiv, 'stepPenalty', stepPenalty);
+    addInfo(infoDiv, 'averagePenalty', averagePenalty);
     //Time records
     let startTime = new Date(),
         donePreprocess, doneResampling, doneSimilarityCalc, doneOrdering;
@@ -44,7 +53,7 @@
         });
 
         // //TODO: Only filter in case of alibaba
-        // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 50).map(m => m.key);
+        // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 70).map(m => m.key);
         // //Filter the data
         // data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
 
@@ -53,7 +62,7 @@
         const timeSteps = Array.from(new Set(data.map(d => d[FIELD_TIME_STAMP])));
         const machines = Array.from(new Set(data.map(d => d[FIELD_MACHINE_ID])));
         //Get the size and set the sizes
-        width = timeSteps.length * 30;
+        width = timeSteps.length * 10;
         height = machines.length;
 
         VARIABLES.map((v, i) => {
@@ -61,7 +70,7 @@
             document.getElementById('contourDiv' + i).style.height = height;
         });
         //Display number of machines
-        console.log('Machines: ' + machines.length);
+        addInfo(infoDiv, 'Machines', machines.length);
         //Sort the machines so we can gurantee the naming order from source to target (source always < target)
         machines.sort();
 
@@ -71,7 +80,7 @@
 
         //For time logging purpose.
         donePreprocess = new Date();
-        console.log('Preprocess: ' + (donePreprocess - startTime) + "ms");
+        addInfo(infoDiv, 'Preprocess', (donePreprocess - startTime) + "ms");
 
         //Resample the data.
         let resampleParts = [];
@@ -83,10 +92,11 @@
         let timeStepsLength = timeSteps.length;
         //Split the data
         for (let i = 0; i < machines.length; i++) {
-            if (machineTimeObject[machines[i]].length < timeStepsLength) {
-                resampleParts[resampleCounter % maxWorkers].push(machineTimeObject[machines[i]]);
-                resampleCounter++;
-            }
+            //TODO: For alibaba => should check this to reduce sampling time
+            // if (machineTimeObject[machines[i]].length < timeStepsLength) {
+            resampleParts[resampleCounter % maxWorkers].push(machineTimeObject[machines[i]]);
+            resampleCounter++;
+            // }
         }
 
         //Start workers
@@ -108,7 +118,7 @@
                 onCompleteResampling(machineTimeObject);
                 //Done re-sampling
                 doneResampling = new Date();
-                console.log('Done resampling: ' + (doneResampling - donePreprocess) + 'ms')
+                addInfo(infoDiv, 'Done resampling', (doneResampling - donePreprocess) + 'ms')
             }
         }
 
@@ -142,12 +152,11 @@
                 similarityResultCounter += 1;
                 similarityResults = similarityResults.concat(evt);
                 if (similarityResultCounter === similarityParts.length) {
-                    debugger
                     resetWorkers();
                     onCompleteSimilarityCal(similarityResults);
 
                     doneSimilarityCalc = new Date();
-                    console.log('Done similarity calculation: ' + (doneSimilarityCalc - doneResampling) + 'ms');
+                    addInfo(infoDiv, 'Done similarity calculation', (doneSimilarityCalc - doneResampling) + 'ms');
                 }
             }
 
@@ -176,7 +185,7 @@
                     orderingResultCounter += 1;
                     if (orderingResultCounter === orderParts.length) {
                         doneOrdering = new Date();
-                        console.log('Done ordering: ' + (doneOrdering - doneSimilarityCalc) + 'ms');
+                        addInfo(infoDiv, 'Done ordering', (doneOrdering - doneSimilarityCalc) + 'ms');
                         resetWorkers();
                     }
                     let theVar = orderResults.variable;
@@ -194,8 +203,8 @@
                         z.push(machineTimeObject[machine].map(st => st[theVar]));
                     });
                     let flatZ = z.flat();
-                    let min = d3.mean(flatZ);
-                    // let min = d3.min(flatZ);
+                    let min = d3.min(flatZ) - 1;
+                    // let min = d3.mean(flatZ);
                     let max = d3.max(flatZ);
                     let numOfRanges = 5;
                     let range = (max - min) / numOfRanges;
@@ -204,6 +213,11 @@
                         thresholds.push(min + i * range);
                     }
                     let colors = thresholds.map(v => colorSchemes[theVar](v / max));
+
+                    // Blue to red scheme
+                    // let thresholds = [10e-3, 40, 60, 80, 90];
+                    // let colors = ['#455bdc', '#9faad3', '#e39968', '#c53c33', '#b20a1c'];
+
                     let contourData = {
                         x: x,
                         y: y,
@@ -214,10 +228,9 @@
 
                     plotContour(theDiv, contourData, width, height);
                     let doneDrawing = new Date();
-                    console.log('Done drawing: ' + (doneDrawing - startDrawing) + 'ms');
+                    addInfo(infoDiv, 'Done drawing', (doneDrawing - startDrawing) + 'ms');
                 }
             }
-
         }
     });
 </script>

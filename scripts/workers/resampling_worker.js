@@ -10,9 +10,15 @@ onmessage = function(e){
                 theStep = Object.assign({}, machineTimeSeries[0]);
                 theStep[FIELD_TIME_STAMP] = step;
                 VARIABLES.forEach(theVar=>{
-                    theStep[theVar] = undefined;
+                    theStep[theVar] = null;
                 });
             }
+            //Convert undefined to null
+            VARIABLES.forEach(theVar =>{
+                if(theStep[theVar] === undefined){
+                    theStep[theVar] = null;
+                }
+            });
             return theStep;
         });
         results.push(result);
