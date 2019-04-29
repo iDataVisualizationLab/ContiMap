@@ -7,7 +7,7 @@ const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 // const VARIABLES = ["cpu_util_percent"];
 
 /**Configuration**/
-const oneWay = false;
+const oneWay = true;
 const smooth = false;
 const stepPenalty = false;
 function addInfo(theDiv, key, value){
