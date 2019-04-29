@@ -17,12 +17,8 @@
 <div id="contourDiv2"></div>
 <script>
     const theVar = 'CPU1 Temp';
-    let width = window.innerWidth/2;
-    let height = window.innerHeight/2;
-    VARIABLES.map((v, i) => {
-        document.getElementById('contourDiv' + i).style.width = width;
-        document.getElementById('contourDiv' + i).style.height = height;
-    });
+    let width;
+    let height;
 
     const colorSchemes = {
         "CPU1 Temp": d3.interpolateReds,
@@ -56,6 +52,14 @@
         data.sort((a, b) => a[FIELD_TIME_STAMP] - b[FIELD_TIME_STAMP]);
         const timeSteps = Array.from(new Set(data.map(d => d[FIELD_TIME_STAMP])));
         const machines = Array.from(new Set(data.map(d => d[FIELD_MACHINE_ID])));
+        //Get the size and set the sizes
+        width = timeSteps.length * 30;
+        height = machines.length;
+
+        VARIABLES.map((v, i) => {
+            document.getElementById('contourDiv' + i).style.width = width;
+            document.getElementById('contourDiv' + i).style.height = height;
+        });
         //Display number of machines
         console.log('Machines: ' + machines.length);
         //Sort the machines so we can gurantee the naming order from source to target (source always < target)

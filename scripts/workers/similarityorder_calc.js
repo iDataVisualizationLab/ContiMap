@@ -1,3 +1,14 @@
+/**
+ * Build the maximum path
+ * @param data will have the format as [{'source': source, 'target': target, 'weight': similarity }, {}]
+ */
+function maximumPath(machines, links) {
+    //Order the weights by descending order.
+    links.sort((a, b) => b.weight - a.weight);
+    // let sequence = twoWayOrdering(links, machines);
+    let sequence = oneWayOrdering(links, machines);
+    return sequence;
+}
 function twoWayOrdering(links, machines) {
     let sequence = [];
     let topLink = links[0];
@@ -101,16 +112,5 @@ function oneWayOrdering(links, machines) {
             break;
         }
     }
-    return sequence;
-}
-/**
- * Build the maximum path
- * @param data will have the format as [{'source': source, 'target': target, 'weight': similarity }, {}]
- */
-function maximumPath(machines, links) {
-    //Order the weights by descending order.
-    links.sort((a, b) => b.weight - a.weight);
-    let sequence = twoWayOrdering(links, machines);
-    // let sequence = oneWayOrdering(links, machines);
     return sequence;
 }
