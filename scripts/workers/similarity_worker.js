@@ -12,7 +12,7 @@ onmessage = function(e){
         VARIABLES.forEach(theVar=>{
             let x = x1.map(d=>d[theVar]);
             let y = x2.map(d=>d[theVar]);
-            let similarity = rSquared(x, y);
+            let similarity = calculateSimilarity(x, y);
             similarities[theVar] = similarity;
         });
         results.push({'source': source, 'target': target, 'weights': similarities });

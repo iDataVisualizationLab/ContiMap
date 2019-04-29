@@ -3,8 +3,8 @@
  * @param data will have the format as [{'source': source, 'target': target, 'weight': similarity }, {}]
  */
 function maximumPath(machines, links) {
-    //Order the weights by descending order.
-    links.sort((a, b) => b.weight - a.weight);
+    //Order the weights by ascending order.
+    links.sort((a, b) => a.weight - b.weight);
     let sequence;
     if (oneWay) {
         sequence = oneWayOrdering(links, machines);
@@ -23,13 +23,13 @@ function twoWayOrdering(links, machines) {
     sequence.push(right);
     //Todo: May drop this for better performance, in that case we need to copy the links to avoid modifying it.
     topLink.visited = true;
-    let leftExpandValue = Number.NEGATIVE_INFINITY;
-    let rightExpandValue = Number.NEGATIVE_INFINITY;
+    let leftExpandValue = Number.POSITIVE_INFINITY;
+    let rightExpandValue = Number.POSITIVE_INFINITY;
     let leftExpand = undefined;
     let rightExpand = undefined;
     while (true) {
-        //TODO: Only calculate left expand value if it is negative infinity or the sequence already contains either source or target
-        if (leftExpandValue === Number.NEGATIVE_INFINITY || sequence.indexOf(leftExpand.source) >= 0 || sequence.indexOf(leftExpand.target) >= 0) {
+        //TODO: Only calculate left expand value if it is positive infinity or the sequence already contains either source or target
+        if (leftExpandValue === Number.POSITIVE_INFINITY || sequence.indexOf(leftExpand.source) >= 0 || sequence.indexOf(leftExpand.target) >= 0) {
             leftExpand = links.find(//Take the first element only since this is the highest
                 l => !l.visited //must not be visited
                     && (
@@ -41,8 +41,8 @@ function twoWayOrdering(links, machines) {
             }
         }
 
-        //TODO: Only calculate right expand value if it is negative infinity or the sequence already contains either source or target
-        if (rightExpandValue === Number.NEGATIVE_INFINITY || sequence.indexOf(rightExpand.source) >= 0 || sequence.indexOf(rightExpand.target) >= 0) {
+        //TODO: Only calculate right expand value if it is positive infinity or the sequence already contains either source or target
+        if (rightExpandValue === Number.POSITIVE_INFINITY || sequence.indexOf(rightExpand.source) >= 0 || sequence.indexOf(rightExpand.target) >= 0) {
             rightExpand = links.find(
                 l => !l.visited //must not be visited
                     && (
@@ -54,8 +54,8 @@ function twoWayOrdering(links, machines) {
             }
         }
 
-        //Choose the expansion direction (left or right, with higher weight).
-        if (leftExpandValue > rightExpandValue) {
+        //Choose the expansion direction (left or right, with lower weight).
+        if (leftExpandValue < rightExpandValue) {
             //Expand on the left
             let l = leftExpand;
             l.visited = true;//Mark this node as visited
@@ -65,8 +65,8 @@ function twoWayOrdering(links, machines) {
                 left = l.source;
             }
             sequence.unshift(left);//Put it to the left
-            //We expanded on the left so we need to set its expanded value to negative infinity to trigger recalculation of left expand
-            leftExpandValue = Number.NEGATIVE_INFINITY;
+            //We expanded on the left so we need to set its expanded value to positive infinity to trigger recalculation of left expand
+            leftExpandValue = Number.POSITIVE_INFINITY;
         } else {
             //Expand on the right
             let l = rightExpand;
@@ -77,8 +77,8 @@ function twoWayOrdering(links, machines) {
                 right = l.source;
             }
             sequence.push(right);//Put it to the right
-            //We expanded on the right so we need to set its expanded value to negative infinity to trigger recalculation of right expand
-            rightExpandValue = Number.NEGATIVE_INFINITY;
+            //We expanded on the right so we need to set its expanded value to positive infinity to trigger recalculation of right expand
+            rightExpandValue = Number.POSITIVE_INFINITY;
         }
 
         //If all nodes are put then finish

@@ -7,11 +7,9 @@ const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 // const VARIABLES = ["cpu_util_percent"];
 
 /**Configuration**/
-const removeNull = false;
-const stepPenalty = false;
-const averagePenalty = false;
-const oneWay = true;
+const oneWay = false;
 const smooth = false;
+const stepPenalty = false;
 function addInfo(theDiv, key, value){
     theDiv.innerHTML += `<br/>${key}: ${value}`;
 }

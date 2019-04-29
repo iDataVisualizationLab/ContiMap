@@ -30,10 +30,9 @@
     //Info div
     let infoDiv = document.getElementById('infoDiv');
     infoDiv.innerHTML = 'configuration';
-    addInfo(infoDiv, 'removeNull', removeNull);
     addInfo(infoDiv, 'oneWay', oneWay);
     addInfo(infoDiv, 'stepPenalty', stepPenalty);
-    addInfo(infoDiv, 'averagePenalty', averagePenalty);
+
     //Time records
     let startTime = new Date(),
         donePreprocess, doneResampling, doneSimilarityCalc, doneOrdering;
