@@ -10,6 +10,15 @@ const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 const oneWay = true;
 const smooth = false;
 const stepPenalty = false;
-function addInfo(theDiv, key, value){
-    theDiv.innerHTML += `<br/>${key}: ${value}`;
+function addInfo(theTbl, key, value, unit, options){
+    let row = theTbl.insertRow();
+    let keyCell = row.insertCell();
+    keyCell.innerHTML = key;
+    let valueCell = row.insertCell();
+    valueCell.style.textAlign = 'right';
+    if(unit===0 || unit){
+        let unitCell = row.insertCell();
+        unitCell.innerHTML = unit;
+    }
+    valueCell.innerHTML = value;
 }

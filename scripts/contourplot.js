@@ -1,8 +1,19 @@
-function plotContour(theDiv, data, width, height) {
+const allContours = [];
+function plotContour(theDiv, data, width, height, onPlotContourComplete) {
     let thresholds = data.thresholds;
     let colors = data.colors;
     let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
     let contours = d3.contours().thresholds(thresholds).size([data.z[0].length, data.z.length]).smooth(smooth)(data.z.flat());
+    //This section store the contours for area calculation later-on.
+    contours.forEach((ct, i) => {
+            let dt = {
+                variable: data.variable,
+                layerIndex: i,
+                coordinates: ct.coordinates
+            }
+            allContours.push(dt);
+        }
+    );
 
     function scale(scaleX, scaleY) {
         return d3.geoTransform({
@@ -11,6 +22,7 @@ function plotContour(theDiv, data, width, height) {
             }
         });
     }
+
     let scaleX = width / data.z[0].length;
     let scaleY = height / data.z.length;
     //Buidling the path
@@ -20,4 +32,6 @@ function plotContour(theDiv, data, width, height) {
     let g = svg.append("g");
     let ctPaths = g.selectAll("path").data(contours).enter().append("path").attr("d", path)
         .attr("fill", d => colorScale(d.value));
+    onPlotContourComplete(data.theVar);
 }
+

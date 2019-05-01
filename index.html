@@ -10,9 +10,22 @@
     <script src="scripts/workers/similarityorder_calc.js"></script>
     <script src="scripts/contourplot.js"></script>
     <title>Alibaba</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        table, td, th {
+            border: 1px solid black;
+        }
+        td{
+            padding: 4px;
+        }
+    </style>
 </head>
 <body>
-<div id="infoDiv"></div>
+<div id="infoDiv">
+    <table id="infoTbl"></table>
+</div>
 <div id="contourDiv0"></div>
 <div id="contourDiv1"></div>
 <div id="contourDiv2"></div>
@@ -28,10 +41,9 @@
         "cpu_util_percent": d3.interpolateReds
     };
     //Info div
-    let infoDiv = document.getElementById('infoDiv');
-    infoDiv.innerHTML = 'configuration';
-    addInfo(infoDiv, 'oneWay', oneWay);
-    addInfo(infoDiv, 'stepPenalty', stepPenalty);
+    let infoTbl = document.getElementById('infoTbl');
+    addInfo(infoTbl, 'oneWay', oneWay);
+    addInfo(infoTbl, 'stepPenalty', stepPenalty);
 
     //Time records
     let startTime = new Date(),
@@ -52,7 +64,7 @@
         });
 
         // //TODO: Only filter in case of alibaba
-        // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 70).map(m => m.key);
+        // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 50).map(m => m.key);
         // //Filter the data
         // data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
 
@@ -69,7 +81,7 @@
             document.getElementById('contourDiv' + i).style.height = height;
         });
         //Display number of machines
-        addInfo(infoDiv, 'Machines', machines.length);
+        addInfo(infoTbl, 'Machines', machines.length);
         //Sort the machines so we can gurantee the naming order from source to target (source always < target)
         machines.sort();
 
@@ -79,7 +91,7 @@
 
         //For time logging purpose.
         donePreprocess = new Date();
-        addInfo(infoDiv, 'Preprocess', (donePreprocess - startTime) + "ms");
+        addInfo(infoTbl, 'Preprocess', (donePreprocess - startTime) + "ms");
 
         //Resample the data.
         let resampleParts = [];
@@ -88,7 +100,6 @@
         }
 
         let resampleCounter = 0;
-        let timeStepsLength = timeSteps.length;
         //Split the data
         for (let i = 0; i < machines.length; i++) {
             //TODO: For alibaba => should check this to reduce sampling time
@@ -117,7 +128,7 @@
                 onCompleteResampling(machineTimeObject);
                 //Done re-sampling
                 doneResampling = new Date();
-                addInfo(infoDiv, 'Done resampling', (doneResampling - donePreprocess) + 'ms')
+                addInfo(infoTbl, 'Done resampling', (doneResampling - donePreprocess) + 'ms')
             }
         }
 
@@ -155,7 +166,7 @@
                     onCompleteSimilarityCal(similarityResults);
 
                     doneSimilarityCalc = new Date();
-                    addInfo(infoDiv, 'Done similarity calculation', (doneSimilarityCalc - doneResampling) + 'ms');
+                    addInfo(infoTbl, 'Done similarity calculation', (doneSimilarityCalc - doneResampling) + 'ms');
                 }
             }
 
@@ -179,12 +190,14 @@
                 });
                 let orderingResultCounter = 0;
 
-                function onOrderResult(orderResults) {
+                let totalDraws = VARIABLES.length;
+                let drawingResultCounter = 0;
 
+                function onOrderResult(orderResults) {
                     orderingResultCounter += 1;
                     if (orderingResultCounter === orderParts.length) {
                         doneOrdering = new Date();
-                        addInfo(infoDiv, 'Done ordering', (doneOrdering - doneSimilarityCalc) + 'ms');
+                        addInfo(infoTbl, 'Done ordering', (doneOrdering - doneSimilarityCalc) + 'ms');
                         resetWorkers();
                     }
                     let theVar = orderResults.variable;
@@ -222,14 +235,55 @@
                         y: y,
                         z: z,
                         thresholds: thresholds,
-                        colors: colors
+                        colors: colors,
+                        variable: theVar
                     };
+                    plotContour(theDiv, contourData, width, height, onDrawingCompleted);
 
-                    plotContour(theDiv, contourData, width, height);
+                    function onDrawingCompleted(theVar) {
+
+                        drawingResultCounter += 1;
+                        //Done all drawing, start processing the contour area calculation.
+                        let totalPolygonLayerCount = allContours.length;
+                        let polygonLayerResultCounter = 0;
+                        let allContourAreas = [];
+                        if (totalDraws === drawingResultCounter) {
+                            //Start calculating from here
+                            allContours.forEach((cl, i) => {
+                                startWorker('scripts/workers/area_worker.js', cl, onLayerAreaResult, i);
+                            });
+                        }
+
+                        /**
+                         *
+                         * @param result result will have this format {variable: theVar, layerIndex: layerIndex, 'areas': results}
+                         */
+                        function onLayerAreaResult(result) {
+                            allContourAreas.push(result);
+                            polygonLayerResultCounter += 1;
+                            if (polygonLayerResultCounter === totalPolygonLayerCount) {
+                                resetWorkers();
+                                //Display contour info area.
+                                displayContourAreasInfo(allContourAreas);
+                            }
+                        }
+
+                    }
+
                     let doneDrawing = new Date();
-                    addInfo(infoDiv, 'Done drawing', (doneDrawing - startDrawing) + 'ms');
+                    addInfo(infoTbl, `Done drawing ${theVar}`, (doneDrawing - startDrawing) + 'ms');
                 }
+
             }
+        }
+
+        function displayContourAreasInfo(allContourAreas) {
+            allContourAreas.sort((a, b) => {
+                return a.variable !== b.variable ? a.variable.localeCompare(b.variable) : a.layerIndex - b.layerIndex;
+            });
+            allContourAreas.forEach(result => {
+                addInfo(infoTbl, `${result.variable}, layer index: ${result.layerIndex}, area count: ${result.areas.length}, total area`, d3.sum(result.areas).toFixed(1));
+            });
         }
     });
 </script>
