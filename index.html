@@ -5,35 +5,43 @@
     <script src="lib/d3.js"></script>
     <script src="lib/underscore.js"></script>
     <script src="lib/simple-statistics.min.js"></script>
+    <script src="lib/jquery.js"></script>
+
     <script src="scripts/constants.js"></script>
     <script src="scripts/workers/webworker.js"></script>
     <script src="scripts/workers/similarityorder_calc.js"></script>
     <script src="scripts/contourplot.js"></script>
     <title>Alibaba</title>
     <style>
-        table {
-            border-collapse: collapse;
-        }
-        table, td, th {
-            border: 1px solid black;
-        }
-        td{
-            padding: 4px;
-        }
+        @import 'css/floatingBox.css';
+        @import 'css/floatingbutton.css';
+        @import "css/main.css";
+
     </style>
 </head>
 <body>
-<div id="infoDiv">
-    <table id="infoTbl"></table>
+<div id="configurationContainer" class="floatingBox">
+    <div id="configurationContainerHeader" class="floatingBoxHeader"><span class="floatingBoxButton"
+                                                                 onclick="closeFloatingBox('btnConfiguration', 'configurationContainer')">[-]</span>
+        Configuration
+    </div>
+    <div class="floatingBoxContent">
+        <div>
+            <table id="infoTbl"></table>
+        </div>
+    </div>
 </div>
-<div id="contourDiv0"></div>
-<div id="contourDiv1"></div>
-<div id="contourDiv2"></div>
+
+<div id="contours">
+    <div id="timeLineDiv"></div>
+    <div id="contourDiv"></div>
+</div>
+<!--section for the buttons-->
+<a id="btnConfiguration" class="tab tab_right" style="opacity: 0.0;"
+   onclick="openFloatingBox('btnConfiguration', 'configurationContainer')"><img src="images/tabicon.gif" alt="">Configuration<span class="screen_reader"> Will open a new window</span></a>
+
 <script>
     const theVar = 'CPU1 Temp';
-    let width;
-    let height;
-
     const colorSchemes = {
         "CPU1 Temp": d3.interpolateReds,
         "Fan1 speed": d3.interpolateBlues,
@@ -42,8 +50,8 @@
     };
     //Info div
     let infoTbl = document.getElementById('infoTbl');
-    addInfo(infoTbl, 'oneWay', oneWay);
-    addInfo(infoTbl, 'stepPenalty', stepPenalty);
+    addInfo(infoTbl, 'oneWay', oneWay, {valueAlignment: 'left'});
+    addInfo(infoTbl, 'stepPenalty', stepPenalty, {valueAlignment: 'left'});
 
     //Time records
     let startTime = new Date(),
@@ -73,13 +81,31 @@
         const timeSteps = Array.from(new Set(data.map(d => d[FIELD_TIME_STAMP])));
         const machines = Array.from(new Set(data.map(d => d[FIELD_MACHINE_ID])));
         //Get the size and set the sizes
-        width = timeSteps.length * 10;
-        height = machines.length;
 
-        VARIABLES.map((v, i) => {
-            document.getElementById('contourDiv' + i).style.width = width;
-            document.getElementById('contourDiv' + i).style.height = height;
-        });
+        width = Math.max(Math.round(window.innerWidth*2/3), timeSteps.length);
+        height = Math.max(window.innerHeight, machines.length);
+        pixelsPerColumn = Math.ceil(width/timeSteps.length);
+        pixelsPerRow = Math.ceil(height/machines.length);
+        //We need to make sure that the width is divisible by the timeSteps, and height is divisible by machines
+        width = pixelsPerColumn * timeSteps.length;
+        height = pixelsPerRow * machines.length;
+
+        svgWidth = width + margins.left + margins.right;
+        svgHeight = VARIABLES.length * height + margins.top + margins.bottom;
+        //Now we can draw the timeLine.
+        let timeLineHeight = 30;
+        drawTimeLine('timeLineDiv', timeSteps, svgWidth, timeLineHeight);
+        //Add svg and the groups for the contour plots of the variables.
+        let mainSvg = d3.select(`#contourDiv`).append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight);
+        let mainGroup = mainSvg
+            .append("g").attr("transform", `translate(${margins.left},${margins.top})`);
+        //Add the groups
+        mainGroup.selectAll('.contourPlot').data(VARIABLES).enter().append("g")
+            .attr('class', 'contourPlot').attr('id', (d, i)=>`contourPlot${i}`)
+            .attr("transform", (d, i)=>`translate(0, ${i*height})`);
+
         //Display number of machines
         addInfo(infoTbl, 'Machines', machines.length);
         //Sort the machines so we can gurantee the naming order from source to target (source always < target)
@@ -203,10 +229,9 @@
                     let theVar = orderResults.variable;
 
                     let startDrawing = new Date();
-                    let theDiv = 'contourDiv' + VARIABLES.indexOf(theVar);
+                    let theGroup = d3.select(`#contourPlot${VARIABLES.indexOf(theVar)}`);
                     let order = orderResults.order;
-                    //Resetting the size
-                    document.getElementById(theDiv).style.height = order.length
+
                     //Building the data
                     let x = timeSteps;
                     let y = order;
@@ -238,7 +263,7 @@
                         colors: colors,
                         variable: theVar
                     };
-                    plotContour(theDiv, contourData, width, height, onDrawingCompleted);
+                    plotContour(theGroup, contourData, width, height, onDrawingCompleted);
 
                     function onDrawingCompleted(theVar) {
 
@@ -256,7 +281,7 @@
 
                         /**
                          *
-                         * @param result result will have this format {variable: theVar, layerIndex: layerIndex, 'areas': results}
+                         * @param result result will have this format {variable: theVar, layerIndex: layerIndex, 'areas': results, layerValue: layerValue}
                          */
                         function onLayerAreaResult(result) {
                             allContourAreas.push(result);
@@ -265,11 +290,11 @@
                                 resetWorkers();
                                 //Display contour info area.
                                 displayContourAreasInfo(allContourAreas);
+                                //After all, process the sticky now here (since once done display we will have the offset information.
+                                setupScrollStickyTimeLine();
                             }
                         }
-
                     }
-
                     let doneDrawing = new Date();
                     addInfo(infoTbl, `Done drawing ${theVar}`, (doneDrawing - startDrawing) + 'ms');
                 }
@@ -282,10 +307,24 @@
                 return a.variable !== b.variable ? a.variable.localeCompare(b.variable) : a.layerIndex - b.layerIndex;
             });
             allContourAreas.forEach(result => {
-                addInfo(infoTbl, `${result.variable}, layer index: ${result.layerIndex}, area count: ${result.areas.length}, total area`, d3.sum(result.areas).toFixed(1));
+                addInfo(infoTbl, `${result.variable}, layer index: ${result.layerIndex}, area count: ${result.areas.length}, total area`, Math.round(d3.sum(result.areas)), {bgcolor: allColorScales[result.variable](result.layerValue)});
             });
         }
+
     });
+    function setupScrollStickyTimeLine(){
+        window.onscroll = processScroll;
+        let timeLine = document.getElementById("timeLineDiv");
+        let sticky = timeLine.offsetTop;
+        function processScroll() {
+            if (window.pageYOffset >= sticky) {
+                timeLine.classList.add("sticky")
+            } else {
+                timeLine.classList.remove("sticky");
+            }
+        }
+    }
 </script>
+<script src="scripts/floatingBox.js"></script>
 </body>
 </html>

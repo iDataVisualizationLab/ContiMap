@@ -10,15 +10,30 @@ const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 const oneWay = true;
 const smooth = false;
 const stepPenalty = false;
-function addInfo(theTbl, key, value, unit, options){
+/**Sizes**/
+let margins = {left: 10, top: 0, right: 80, bottom: 0};
+let width;
+let height;
+let svgWidth;
+let svgHeight;
+let pixelsPerColumn;
+let pixelsPerRow;
+
+function addInfo(theTbl, key, value, options){
+    //Process options.
+    let bgcolor = options?options.bgcolor:undefined;
     let row = theTbl.insertRow();
     let keyCell = row.insertCell();
     keyCell.innerHTML = key;
     let valueCell = row.insertCell();
-    valueCell.style.textAlign = 'right';
-    if(unit===0 || unit){
-        let unitCell = row.insertCell();
-        unitCell.innerHTML = unit;
+    if(options && options.valueAlignment){
+        valueCell.style.textAlign = options.valueAlignment;
+    }else{
+        valueCell.style.textAlign = 'right';
     }
+
     valueCell.innerHTML = value;
+    if(bgcolor){
+        keyCell.style.backgroundColor = bgcolor;
+    }
 }
