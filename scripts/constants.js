@@ -11,7 +11,7 @@ const oneWay = true;
 const smooth = false;
 const stepPenalty = false;
 /**Sizes**/
-let margins = {left: 10, top: 0, right: 80, bottom: 0};
+let margins = {left: 110, top: 0, right: 10, bottom: 0};
 let width;
 let height;
 let svgWidth;

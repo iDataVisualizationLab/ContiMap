@@ -74,7 +74,7 @@
         });
 
         // //TODO: Only filter in case of alibaba
-        // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 50).map(m => m.key);
+        // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 70).map(m => m.key);
         // //Filter the data
         // data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
 
@@ -93,14 +93,26 @@
         width = pixelsPerColumn * timeSteps.length;
         height = pixelsPerRow * machines.length;
 
-        fisheyeX = fisheye.scale(d3.scaleIdentity).domain([0, width]).focus(1000);
-        fisheyeY = fisheye.scale(d3.scaleIdentity).domain([0, height]).focus(100);
+        fisheyeX = fisheye.scale(d3.scaleIdentity).domain([0, width]);
+        fisheyeY = fisheye.scale(d3.scaleIdentity).domain([0, height]);
 
         svgWidth = width + margins.left + margins.right;
         svgHeight = VARIABLES.length * height + margins.top + margins.bottom;
         //Now we can draw the timeLine.
         let timeLineHeight = 30;
-        drawTimeLine('timeLineDiv', timeSteps, svgWidth, timeLineHeight);
+        let timeLineWidth = svgWidth;
+        //Add the SVG for the timeline
+        let timeLineSvg = d3.select('#timeLineDiv').append("svg").attr('width', timeLineWidth).attr('height', timeLineHeight);
+        //Add a rect for the background
+        timeLineSvg.append("rect").attr("x", 0).attr("y", 0).attr("width", timeLineWidth).attr("height", timeLineHeight).attr("fill", "white");
+        //Add a line at the bottom
+        timeLineSvg.append('line').attr('x1', 0).attr('y1', timeLineHeight-1).attr('x2', timeLineWidth).attr('y2', timeLineHeight-1)
+            .attr('stroke', 'black').attr('stroke-width', 1);
+        //Add a group to display the timeline to
+        timeLineSvg.append("g").attr("id", "timeLineG").attr("transform", `translate(${margins.left}, ${timeLineHeight-1})`);//-1 is for the bottom line
+        drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, fisheyeX);
+
+
         //Add svg and the groups for the contour plots of the variables.
         let mainSvg = d3.select(`#contourDiv`).append("svg")
             .attr("width", svgWidth)
@@ -324,7 +336,7 @@
             let mouseX = mouse[0] - margins.left;
             let mouseY = mouse[1] - margins.top;
             //If out of bound simply reset
-            if(mouseX <= 0 || mouseX >= width || mouseY <= 0 || mouseY >= VARIABLES.length * height){
+            if (mouseX <= 0 || mouseX >= width || mouseY <= 0 || mouseY >= VARIABLES.length * height) {
                 return;
             }
 
@@ -337,6 +349,8 @@
             let contourPlot = d3.select(`#contourPlot${groupIndex}`);
             plotContour(contourPlot, contourPlot.node().contourData, width, height, () => {
             }, fisheyeX, fisheyeY);
+            //Redraw timeline
+            drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, fisheyeX);
         });
     });
 
