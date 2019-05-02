@@ -93,8 +93,8 @@
         width = pixelsPerColumn * timeSteps.length;
         height = pixelsPerRow * machines.length;
 
-        fisheyeX = fisheye.scale(d3.scaleIdentity).domain([0, width]);
-        fisheyeY = fisheye.scale(d3.scaleIdentity).domain([0, height]);
+        fisheyeX = fisheye.scale(d3.scaleIdentity).domain([0, width]).focus(width/2);
+        fisheyeY = fisheye.scale(d3.scaleIdentity).domain([0, height]).focus(height/2);
 
         svgWidth = width + margins.left + margins.right;
         svgHeight = VARIABLES.length * height + margins.top + margins.bottom;
