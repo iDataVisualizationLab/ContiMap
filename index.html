@@ -363,9 +363,9 @@
                         //Variable name is expanded in all rows + 1 for the total
                         row.push({innerHTML: vl.variable, attributes: [{key: 'rowspan', value: variable.values.length +1}]});
                         //Label is extended in all rows
-                        row.push({innerHTML: 'Layer Index', attributes: [{key: 'rowspan', value: variable.values.length}]});
+                        row.push({innerHTML: 'Layer value', attributes: [{key: 'rowspan', value: variable.values.length}]});
                     }
-                    row.push({innerHTML: vl.layerIndex, styles: [{key: 'backgroundColor', value: allColorScales[vl.variable](vl.layerValue)}, {key: 'textAlign', value: 'right'}]})
+                    row.push({innerHTML: numberWithCommas(Math.round(vl.layerValue)), styles: [{key: 'backgroundColor', value: allColorScales[vl.variable](vl.layerValue)}, {key: 'textAlign', value: 'right'}]})
                     if(i==0){
                         //Label is extended in all rows
                         row.push({innerHTML: 'Area count', attributes: [{key: 'rowspan', value: variable.values.length}]});
