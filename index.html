@@ -6,12 +6,13 @@
     <script src="lib/underscore.js"></script>
     <script src="lib/simple-statistics.min.js"></script>
     <script src="lib/jquery.js"></script>
+    <script src="lib/fisheye.js"></script>
 
     <script src="scripts/constants.js"></script>
     <script src="scripts/workers/webworker.js"></script>
     <script src="scripts/workers/similarityorder_calc.js"></script>
     <script src="scripts/contourplot.js"></script>
-    <title>Alibaba</title>
+    <title>nD Heatmap</title>
     <style>
         @import 'css/floatingBox.css';
         @import 'css/floatingbutton.css';
@@ -22,7 +23,7 @@
 <body>
 <div id="configurationContainer" class="floatingBox">
     <div id="configurationContainerHeader" class="floatingBoxHeader"><span class="floatingBoxButton"
-                                                                 onclick="closeFloatingBox('btnConfiguration', 'configurationContainer')">[-]</span>
+                                                                           onclick="closeFloatingBox('btnConfiguration', 'configurationContainer')">[-]</span>
         Configuration
     </div>
     <div class="floatingBoxContent">
@@ -38,7 +39,8 @@
 </div>
 <!--section for the buttons-->
 <a id="btnConfiguration" class="tab tab_right" style="opacity: 0.0;"
-   onclick="openFloatingBox('btnConfiguration', 'configurationContainer')"><img src="images/tabicon.gif" alt="">Configuration<span class="screen_reader"> Will open a new window</span></a>
+   onclick="openFloatingBox('btnConfiguration', 'configurationContainer')"><img src="images/tabicon.gif" alt="">Configuration<span
+        class="screen_reader"> Will open a new window</span></a>
 
 <script>
     const theVar = 'CPU1 Temp';
@@ -82,13 +84,17 @@
         const machines = Array.from(new Set(data.map(d => d[FIELD_MACHINE_ID])));
         //Get the size and set the sizes
 
-        width = Math.max(Math.round(window.innerWidth*2/3), timeSteps.length);
+        width = Math.max(Math.round(window.innerWidth * 2 / 3), timeSteps.length);
         height = Math.max(window.innerHeight, machines.length);
-        pixelsPerColumn = Math.ceil(width/timeSteps.length);
-        pixelsPerRow = Math.ceil(height/machines.length);
+        pixelsPerColumn = Math.ceil(width / timeSteps.length);
+        pixelsPerRow = Math.ceil(height / machines.length);
+
         //We need to make sure that the width is divisible by the timeSteps, and height is divisible by machines
         width = pixelsPerColumn * timeSteps.length;
         height = pixelsPerRow * machines.length;
+
+        fisheyeX = fisheye.scale(d3.scaleIdentity).domain([0, width]).focus(1000);
+        fisheyeY = fisheye.scale(d3.scaleIdentity).domain([0, height]).focus(100);
 
         svgWidth = width + margins.left + margins.right;
         svgHeight = VARIABLES.length * height + margins.top + margins.bottom;
@@ -103,8 +109,8 @@
             .append("g").attr("transform", `translate(${margins.left},${margins.top})`);
         //Add the groups
         mainGroup.selectAll('.contourPlot').data(VARIABLES).enter().append("g")
-            .attr('class', 'contourPlot').attr('id', (d, i)=>`contourPlot${i}`)
-            .attr("transform", (d, i)=>`translate(0, ${i*height})`);
+            .attr('class', 'contourPlot').attr('id', (d, i) => `contourPlot${i}`)
+            .attr("transform", (d, i) => `translate(0, ${i * height})`);
 
         //Display number of machines
         addInfo(infoTbl, 'Machines', machines.length);
@@ -295,6 +301,7 @@
                             }
                         }
                     }
+
                     let doneDrawing = new Date();
                     addInfo(infoTbl, `Done drawing ${theVar}`, (doneDrawing - startDrawing) + 'ms');
                 }
@@ -311,11 +318,33 @@
             });
         }
 
+        //Setup mouseover on the svg.
+        mainSvg.on("mousemove", function () {
+            let mouse = d3.mouse(this);
+            let mouseX = mouse[0] - margins.left;
+            let mouseY = mouse[1] - margins.top;
+            //If out of bound simply reset
+            if(mouseX <= 0 || mouseX >= width || mouseY <= 0 || mouseY >= VARIABLES.length * height){
+                return;
+            }
+
+            //Check which group
+            let groupIndex = Math.floor(mouseY / height);
+            mouseY = mouseY - groupIndex * height;
+            fisheyeX.focus(mouseX);
+            fisheyeY.focus(mouseY);
+            //First element
+            let contourPlot = d3.select(`#contourPlot${groupIndex}`);
+            plotContour(contourPlot, contourPlot.node().contourData, width, height, () => {
+            }, fisheyeX, fisheyeY);
+        });
     });
-    function setupScrollStickyTimeLine(){
+
+    function setupScrollStickyTimeLine() {
         window.onscroll = processScroll;
         let timeLine = document.getElementById("timeLineDiv");
         let sticky = timeLine.offsetTop;
+
         function processScroll() {
             if (window.pageYOffset >= sticky) {
                 timeLine.classList.add("sticky")

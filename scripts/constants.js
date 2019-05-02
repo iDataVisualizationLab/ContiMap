@@ -19,6 +19,9 @@ let svgHeight;
 let pixelsPerColumn;
 let pixelsPerRow;
 
+/**Fisheye**/
+let fisheyeX;
+let fisheyeY;
 function addInfo(theTbl, key, value, options){
     //Process options.
     let bgcolor = options?options.bgcolor:undefined;

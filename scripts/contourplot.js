@@ -1,7 +1,8 @@
 const allContours = [];
 let allColorScales = {};
-
-function plotContour(theGroup, data, width, height, onPlotContourComplete) {
+function plotContour(theGroup, data, width, height, onPlotContourComplete, fisheyeX, fisheyeY) {
+    //Save data to the group so we can use it later.
+    theGroup.node().contourData = data;
     let thresholds = data.thresholds;
     let colors = data.colors;
     let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
@@ -19,20 +20,24 @@ function plotContour(theGroup, data, width, height, onPlotContourComplete) {
         }
     );
 
-    function scale(scaleX, scaleY) {
+    function scale(scaleX, scaleY, fisheyeX, fisheyeY) {
         return d3.geoTransform({
             point: function (x, y) {
-                this.stream.point(x * scaleX, y * scaleY);
+                if (fisheyeX && fisheyeY) {
+                    this.stream.point(fisheyeX(x * scaleX), fisheyeY(y * scaleY));
+                } else {
+                    this.stream.point(x * scaleX, y * scaleY);
+                }
             }
         });
     }
 
     let scaleX = width / data.z[0].length;
     let scaleY = height / data.z.length;
-    //Buidling the path
-    var path = d3.geoPath().projection(scale(scaleX, scaleY, width, height));
-
-    theGroup.selectAll("path").data(contours).enter().append("path").attr("d", path)
+    //Building the path
+    // var path = d3.geoPath().projection(scale(scaleX, scaleY, fisheyeX, fisheyeY));
+    var path = d3.geoPath().projection(scale(scaleX, scaleY, fisheyeX, fisheyeY));
+    theGroup.selectAll("path").data(contours).join("path").attr("d", path)
         .attr("fill", d => colorScale(d.value));
     //Draw the y axis
     drawYAxis(theGroup, data.y, width, height);
@@ -48,8 +53,9 @@ function drawTimeLine(theDiv, timeSteps, timeLineWidth, timeLineHeight) {
     //Add a rect for the background
     svg.append("rect").attr("x", 0).attr("y", 0).attr("width", timeLineWidth).attr("height", timeLineHeight).attr("fill", "white");
     let mainSvg = svg.append('g').attr("transform", `translate(${margins.left}, ${timeLineHeight - 1})`);
-    let xScale = d3.scaleLinear().domain(d3.extent(timeSteps)).range([0, timeLineWidth-margins.left - margins.right]);
+    let xScale = d3.scaleLinear().domain(d3.extent(timeSteps)).range([0, timeLineWidth - margins.left - margins.right]);
     let xAxis = d3.axisTop().scale(xScale);
+
     mainSvg.call(xAxis);
 }
 
@@ -57,9 +63,9 @@ function drawYAxis(theGroup, order, contourWidth, yAxisHeight) {
     let yAxisGroup = theGroup.append("g").attr("transform", `translate(${contourWidth}, 0)`);
     //Re-sampling the nodes
     let tickHeight = 20;
-    let jump = Math.ceil(tickHeight/pixelsPerRow);
+    let jump = Math.ceil(tickHeight / pixelsPerRow);
     let sampledElements = [];
-    for (let i = 0; i < order.length; i+=jump) {
+    for (let i = 0; i < order.length; i += jump) {
         sampledElements.push(order[i]);
     }
 
