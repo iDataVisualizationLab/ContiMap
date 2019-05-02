@@ -10,7 +10,7 @@ onmessage = function(e){
     let results = [];
     coordinates.forEach(polygons=>{
        polygons.forEach(polygon=>{
-          results.push(d3.polygonArea(polygon));
+          results.push(Math.abs(d3.polygonArea(polygon)));
        });
     });
     postMessage({variable: theVar, layerIndex: layerIndex, 'areas': results, layerValue: e.data.layerValue});

@@ -5,7 +5,8 @@
     box-sizing: content-box;
     font-family: Arial;
     box-shadow: 5px 5px 5px #444;
-    background-image: -webkit-linear-gradient(left, #fefefe, #eeeeee);
+    /*background-image: -webkit-linear-gradient(left, #fefefe, #eeeeee);*/
+    background-image: -webkit-linear-gradient(left, #eeeeee, #ededed);
     border: 1px solid #ccc;
     border-radius: 9px;
     -moz-border-radius: 9px;

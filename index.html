@@ -27,9 +27,15 @@
         Configuration
     </div>
     <div class="floatingBoxContent">
-        <div>
-            <table id="infoTbl"></table>
-        </div>
+        <br/>
+        <b>Settings</b><br/>
+        <div id="settingDiv"></div>
+        <br/>
+        <b>Calculations</b><br/>
+        <table id="calculationTbl"></table>
+        <br/>
+        <b>Contour info</b><br/>
+        <table id="contourTbl"></table>
     </div>
 </div>
 
@@ -51,9 +57,10 @@
         "cpu_util_percent": d3.interpolateReds
     };
     //Info div
-    let infoTbl = document.getElementById('infoTbl');
-    addInfo(infoTbl, 'oneWay', oneWay, {valueAlignment: 'left'});
-    addInfo(infoTbl, 'stepPenalty', stepPenalty, {valueAlignment: 'left'});
+    let settingDiv = document.getElementById('settingDiv');
+    let calculationTbl = document.getElementById('calculationTbl');
+    let settingTblStr = createTableStr([[{innerHTML: 'oneWay'}, {innerHTML: oneWay}], [{innerHTML: 'penalty'}, {innerHTML: stepPenalty}]]);
+    addInfoHTML(settingDiv, settingTblStr);
 
     //Time records
     let startTime = new Date(),
@@ -87,14 +94,16 @@
         width = Math.max(Math.round(window.innerWidth * 2 / 3), timeSteps.length);
         height = Math.max(window.innerHeight, machines.length);
         pixelsPerColumn = Math.ceil(width / timeSteps.length);
+        //TODO: Note: This is used for sampling of the ticks => may need to check this. When we change the number of rows to be smaller than number of machines (less than a pixel per row)
         pixelsPerRow = Math.ceil(height / machines.length);
+
 
         //We need to make sure that the width is divisible by the timeSteps, and height is divisible by machines
         width = pixelsPerColumn * timeSteps.length;
         height = pixelsPerRow * machines.length;
 
-        fisheyeX = fisheye.scale(d3.scaleIdentity).domain([0, width]).focus(width/2);
-        fisheyeY = fisheye.scale(d3.scaleIdentity).domain([0, height]).focus(height/2);
+        fisheyeX = fisheye.scale(d3.scaleIdentity).domain([0, width]).focus(width / 2);
+        fisheyeY = fisheye.scale(d3.scaleIdentity).domain([0, height]).focus(height / 2);
 
         svgWidth = width + margins.left + margins.right;
         svgHeight = VARIABLES.length * height + margins.top + margins.bottom;
@@ -106,10 +115,10 @@
         //Add a rect for the background
         timeLineSvg.append("rect").attr("x", 0).attr("y", 0).attr("width", timeLineWidth).attr("height", timeLineHeight).attr("fill", "white");
         //Add a line at the bottom
-        timeLineSvg.append('line').attr('x1', 0).attr('y1', timeLineHeight-1).attr('x2', timeLineWidth).attr('y2', timeLineHeight-1)
+        timeLineSvg.append('line').attr('x1', 0).attr('y1', timeLineHeight - 1).attr('x2', timeLineWidth).attr('y2', timeLineHeight - 1)
             .attr('stroke', 'black').attr('stroke-width', 1);
         //Add a group to display the timeline to
-        timeLineSvg.append("g").attr("id", "timeLineG").attr("transform", `translate(${margins.left}, ${timeLineHeight-1})`);//-1 is for the bottom line
+        timeLineSvg.append("g").attr("id", "timeLineG").attr("transform", `translate(${margins.left}, ${timeLineHeight - 1})`);//-1 is for the bottom line
         drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, fisheyeX);
 
 
@@ -125,7 +134,10 @@
             .attr("transform", (d, i) => `translate(0, ${i * height})`);
 
         //Display number of machines
-        addInfo(infoTbl, 'Machines', machines.length);
+        addInfoRow(calculationTbl, [{innerHTML: 'Machines'}, {
+            innerHTML: machines.length,
+            styles: [{key: 'textAlign', value: 'right'}]
+        }]);
         //Sort the machines so we can gurantee the naming order from source to target (source always < target)
         machines.sort();
 
@@ -135,7 +147,10 @@
 
         //For time logging purpose.
         donePreprocess = new Date();
-        addInfo(infoTbl, 'Preprocess', (donePreprocess - startTime) + "ms");
+        addInfoRow(calculationTbl, [{innerHTML: 'Pre-processing'}, {
+            innerHTML: (donePreprocess - startTime) + "ms",
+            styles:[{key: 'textAlign', value: 'right'}]
+        }]);
 
         //Resample the data.
         let resampleParts = [];
@@ -172,7 +187,10 @@
                 onCompleteResampling(machineTimeObject);
                 //Done re-sampling
                 doneResampling = new Date();
-                addInfo(infoTbl, 'Done resampling', (doneResampling - donePreprocess) + 'ms')
+                addInfoRow(calculationTbl, [{innerHTML: 'Done resampling'}, {
+                    innerHTML: (doneResampling - donePreprocess) + 'ms',
+                    styles:[{key: 'textAlign', value: 'right'}]
+                }]);
             }
         }
 
@@ -210,7 +228,10 @@
                     onCompleteSimilarityCal(similarityResults);
 
                     doneSimilarityCalc = new Date();
-                    addInfo(infoTbl, 'Done similarity calculation', (doneSimilarityCalc - doneResampling) + 'ms');
+                    addInfoRow(calculationTbl, [{innerHTML: 'Done similarity calculation'}, {
+                        innerHTML: (doneSimilarityCalc - doneResampling) + 'ms',
+                        styles: [{key: 'textAlign', value: 'right'}]
+                    }]);
                 }
             }
 
@@ -241,7 +262,10 @@
                     orderingResultCounter += 1;
                     if (orderingResultCounter === orderParts.length) {
                         doneOrdering = new Date();
-                        addInfo(infoTbl, 'Done ordering', (doneOrdering - doneSimilarityCalc) + 'ms');
+                        addInfoRow(calculationTbl, [{innerHTML: 'Done ordering'}, {
+                            innerHTML: (doneOrdering - doneSimilarityCalc) + 'ms',
+                            styles: [{key: 'textAlign', value: 'right'}]
+                        }]);
                         resetWorkers();
                     }
                     let theVar = orderResults.variable;
@@ -315,18 +339,57 @@
                     }
 
                     let doneDrawing = new Date();
-                    addInfo(infoTbl, `Done drawing ${theVar}`, (doneDrawing - startDrawing) + 'ms');
+                    addInfoRow(calculationTbl, [{innerHTML: `Done drawing ${theVar}`}, {
+                        innerHTML: (doneDrawing - startDrawing) + 'ms',
+                        styles:[{key: 'textAlign', value: 'right'}]
+                    }]);
+
                 }
 
             }
         }
 
         function displayContourAreasInfo(allContourAreas) {
+            let theTbl = document.getElementById('contourTbl');
             allContourAreas.sort((a, b) => {
                 return a.variable !== b.variable ? a.variable.localeCompare(b.variable) : a.layerIndex - b.layerIndex;
             });
-            allContourAreas.forEach(result => {
-                addInfo(infoTbl, `${result.variable}, layer index: ${result.layerIndex}, area count: ${result.areas.length}, total area`, Math.round(d3.sum(result.areas)), {bgcolor: allColorScales[result.variable](result.layerValue)});
+            let nestedByVariable = d3.nest().key(d=>d.variable).entries(allContourAreas);
+
+            nestedByVariable.forEach(variable=>{
+                variable.values.forEach((vl, i)=>{
+                    let row = [];
+                    if(i===0){
+                        //Variable name is expanded in all rows + 1 for the total
+                        row.push({innerHTML: vl.variable, attributes: [{key: 'rowspan', value: variable.values.length +1}]});
+                        //Label is extended in all rows
+                        row.push({innerHTML: 'Layer Index', attributes: [{key: 'rowspan', value: variable.values.length}]});
+                    }
+                    row.push({innerHTML: vl.layerIndex, styles: [{key: 'backgroundColor', value: allColorScales[vl.variable](vl.layerValue)}, {key: 'textAlign', value: 'right'}]})
+                    if(i==0){
+                        //Label is extended in all rows
+                        row.push({innerHTML: 'Area count', attributes: [{key: 'rowspan', value: variable.values.length}]});
+                    }
+                    row.push({innerHTML: vl.areas.length, styles: [{key: 'backgroundColor', value: allColorScales[vl.variable](vl.layerValue)}, {key: 'textAlign', value: 'right'}]});
+                    if(i==0){
+                        //Label is extended in all rows
+                        row.push({innerHTML: 'Area subtotal', attributes: [{key: 'rowspan', value: variable.values.length}]});
+                    }
+                    row.push({innerHTML: numberWithCommas(Math.round(d3.sum(vl.areas))), styles: [{key: 'backgroundColor', value: allColorScales[vl.variable](vl.layerValue)}, {key: 'textAlign', value: 'right'}]});
+                    addInfoRow(theTbl, row);
+                });
+                //Add row for the total
+                let totalR = [];
+                //Total layers
+                totalR.push({innerHTML: 'Total', styles: [{key: 'font-weight', value: 'bold'}]});
+                totalR.push({innerHTML: variable.values.length, styles:[{key: 'textAlign', value: 'right'}]});
+                //Total Area count
+                totalR.push({innerHTML: 'Total', styles: [{key: 'font-weight', value: 'bold'}]});
+                totalR.push({innerHTML: d3.sum(variable.values.map(vl=>vl.areas.length)), styles:[{key: 'textAlign', value: 'right'}]});
+                //Total Area count
+                totalR.push({innerHTML: 'Total', styles: [{key: 'font-weight', value: 'bold'}]});
+                totalR.push({innerHTML: numberWithCommas(d3.sum(variable.values.map(vl=>Math.round(d3.sum(vl.areas))))), styles:[{key: 'textAlign', value: 'right'}]});
+                addInfoRow(theTbl, totalR);
             });
         }
 
@@ -366,6 +429,9 @@
                 timeLine.classList.remove("sticky");
             }
         }
+    }
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 </script>
 <script src="scripts/floatingBox.js"></script>
