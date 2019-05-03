@@ -14,6 +14,7 @@ const stepPenalty = false;
 let margins = {left: 110, top: 0, right: 10, bottom: 0};
 let width;
 let height;
+let timeLineHeight;
 let svgWidth;
 let svgHeight;
 let pixelsPerColumn;

@@ -108,7 +108,7 @@
         svgWidth = width + margins.left + margins.right;
         svgHeight = VARIABLES.length * height + margins.top + margins.bottom;
         //Now we can draw the timeLine.
-        let timeLineHeight = 30;
+        timeLineHeight = 30;
         let timeLineWidth = svgWidth;
         //Add the SVG for the timeline
         let timeLineSvg = d3.select('#timeLineDiv').append("svg").attr('width', timeLineWidth).attr('height', timeLineHeight);
@@ -381,7 +381,7 @@
                 //Add row for the total
                 let totalR = [];
                 //Total layers
-                totalR.push({innerHTML: 'Total', styles: [{key: 'font-weight', value: 'bold'}]});
+                totalR.push({innerHTML: 'Ranges count', styles: [{key: 'font-weight', value: 'bold'}]});
                 totalR.push({innerHTML: variable.values.length, styles:[{key: 'textAlign', value: 'right'}]});
                 //Total Area count
                 totalR.push({innerHTML: 'Total', styles: [{key: 'font-weight', value: 'bold'}]});

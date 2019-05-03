@@ -50,6 +50,6 @@ $(document).ready(() => {
         }
     });
 });
-
-d3.select("#configurationContainer").style("left", 1600 + "px").style("top", 80 + "px").style("opacity", 0);//+10 is for the default top margin
+debugger
+d3.select("#configurationContainer").style("left", (window.innerWidth*2/3 + margins.left + margins.right) + "px").style("top", timeLineHeight + "px").style("opacity", 0);//+10 is for the default top margin
 d3.select("#btnConfiguration").style("top", 0 + "px").style("opacity", "1");
