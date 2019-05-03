@@ -51,5 +51,5 @@ $(document).ready(() => {
     });
 });
 debugger
-d3.select("#configurationContainer").style("left", (window.innerWidth*2/3 + margins.left + margins.right) + "px").style("top", timeLineHeight + "px").style("opacity", 0);//+10 is for the default top margin
+d3.select("#configurationContainer").style("left", (window.innerWidth*2/3 + margins.left + margins.right + 30) + "px").style("top", timeLineHeight + "px").style("opacity", 0);//+10 is for the default top margin
 d3.select("#btnConfiguration").style("top", 0 + "px").style("opacity", "1");
