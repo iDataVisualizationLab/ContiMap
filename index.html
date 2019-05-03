@@ -66,24 +66,24 @@
     let startTime = new Date(),
         donePreprocess, doneResampling, doneSimilarityCalc, doneOrdering;
 
-    d3.json('data/albbcpu1200s.json').then(data => {
+    // d3.json('data/albbcpu1200s.json').then(data => {
         // d3.json('data/albbcpu2400s.json').then(data => {
         // //Remove _id field
         // data.forEach(d => delete d['_id']);
         // d3.json('data/HPCC_04Oct2018.json').then(data => {
         // d3.json('data/HPCC_21Mar2019.json').then(data => {
         // d3.json('data/HPCC_21Mar2019210.json').then(data => {
-        // d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
+        d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
         const nestedByMachines = d3.nest().key(d => d[FIELD_MACHINE_ID]).entries(data);
         //Calculate the max cpu usage
         nestedByMachines.forEach(mc => {
             mc.values.max_cpu_util_percent = d3.max(mc.values.map(d => d[theVar]));
         });
 
-        //TODO: Only filter in case of alibaba
-        let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 70).map(m => m.key);
-        //Filter the data
-        data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
+        // //TODO: Only filter in case of alibaba
+        // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 70).map(m => m.key);
+        // //Filter the data
+        // data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
 
         //Sort the data by time_stamp
         data.sort((a, b) => a[FIELD_TIME_STAMP] - b[FIELD_TIME_STAMP]);
@@ -188,7 +188,7 @@
                 //Done re-sampling
                 doneResampling = new Date();
                 addInfoRow(calculationTbl, [{innerHTML: 'Done resampling'}, {
-                    innerHTML: (doneResampling - donePreprocess) + 'ms',
+                    innerHTML: numberWithCommas(doneResampling - donePreprocess) + 'ms',
                     styles: [{key: 'textAlign', value: 'right'}]
                 }]);
             }
@@ -229,7 +229,7 @@
 
                     doneSimilarityCalc = new Date();
                     addInfoRow(calculationTbl, [{innerHTML: 'Done similarity calculation'}, {
-                        innerHTML: (doneSimilarityCalc - doneResampling) + 'ms',
+                        innerHTML: numberWithCommas(doneSimilarityCalc - doneResampling) + 'ms',
                         styles: [{key: 'textAlign', value: 'right'}]
                     }]);
                 }
@@ -263,7 +263,7 @@
                     if (orderingResultCounter === orderParts.length) {
                         doneOrdering = new Date();
                         addInfoRow(calculationTbl, [{innerHTML: 'Done ordering'}, {
-                            innerHTML: (doneOrdering - doneSimilarityCalc) + 'ms',
+                            innerHTML: numberWithCommas(doneOrdering - doneSimilarityCalc) + 'ms',
                             styles: [{key: 'textAlign', value: 'right'}]
                         }]);
                         resetWorkers();
@@ -341,7 +341,6 @@
                             //Also we only setup the svg mouse move when all the drawings are done
                             setupMouseMove();
                         }
-
                         /**
                          *
                          * @param result result will have this format {variable: theVar, layerIndex: layerIndex, 'areas': results, layerValue: layerValue}
@@ -361,7 +360,7 @@
 
                     let doneDrawing = new Date();
                     addInfoRow(calculationTbl, [{innerHTML: `Done drawing ${theVar}`}, {
-                        innerHTML: (doneDrawing - startDrawing) + 'ms',
+                        innerHTML: numberWithCommas(doneDrawing - startDrawing) + 'ms',
                         styles: [{key: 'textAlign', value: 'right'}]
                     }]);
 
