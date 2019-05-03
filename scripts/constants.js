@@ -2,9 +2,9 @@
 const FIELD_MACHINE_ID = 'machine_id';
 const FIELD_TIME_STAMP = 'time_stamp';
 /**HPCC**/
-const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 /**Alibaba**/
-// const VARIABLES = ["cpu_util_percent"];
+const VARIABLES = ["cpu_util_percent"];
 
 /**Configuration**/
 const oneWay = true;
@@ -23,7 +23,9 @@ let pixelsPerRow;
 /**Fisheye**/
 let fisheyeX;
 let fisheyeY;
-
+/**Contours**/
+const allContours = [];
+let allColorScales = {};
 function addInfoHTML(theDiv, htmlStr) {
     theDiv.innerHTML += htmlStr;
 }
@@ -51,28 +53,6 @@ function addInfoRow(theTbl, rowDt) {
             });
         }
     });
-
-    // //Process options.
-    // let bgcolor = options ? options.bgcolor : undefined;
-    // let keyColspan = options ? options.keyColspan : 1;
-    // let row = theTbl.insertRow();
-    // let keyCell = row.insertCell();
-    // keyCell.colSpan = keyColspan;
-    // keyCell.innerHTML = key;
-    // if (value) {
-    //     let valueCell = row.insertCell();
-    //     if (options && options.valueAlignment) {
-    //         valueCell.style.textAlign = options.valueAlignment;
-    //     } else {
-    //         valueCell.style.textAlign = 'right';
-    //     }
-    //
-    //     valueCell.innerHTML = value;
-    //     if (bgcolor) {
-    //         keyCell.style.backgroundColor = bgcolor;
-    //     }
-    // }
-    // theDiv.appendChild(theTable);
 }
 
 function createTableStr(rows) {

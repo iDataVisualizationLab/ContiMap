@@ -1,40 +1,12 @@
-const allContours = [];
-let allColorScales = {};
-
 function plotContour(theGroup, data, width, height, onPlotContourComplete, fisheyeX, fisheyeY) {
-    //Save data to the group so we can use it later.
+    debugger
+    //Save data to the group so we can use it later when mouse over.
     theGroup.node().contourData = data;
-    let thresholds = data.thresholds;
-    let colors = data.colors;
-    let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
-    allColorScales[data.variable] = colorScale;
-    let contours = d3.contours().thresholds(thresholds).size([data.z[0].length, data.z.length]).smooth(smooth)(data.z.flat());
-    //This section store the contours for area calculation later-on.
-    contours.forEach((ct, i) => {
-            let dt = {
-                variable: data.variable,
-                layerIndex: i,
-                coordinates: ct.coordinates,
-                layerValue: ct.value
-            }
-            allContours.push(dt);
-        }
-    );
+    let scaleX = data.scaleX;
+    let scaleY = data.scaleY;
+    let colorScale = data.colorScale;
+    let contours = data.contours;
 
-    function scale(scaleX, scaleY, fisheyeX, fisheyeY) {
-        return d3.geoTransform({
-            point: function (x, y) {
-                if (fisheyeX && fisheyeY) {
-                    this.stream.point(fisheyeX(x * scaleX), fisheyeY(y * scaleY));
-                } else {
-                    this.stream.point(x * scaleX, y * scaleY);
-                }
-            }
-        });
-    }
-
-    let scaleX = width / data.z[0].length;
-    let scaleY = height / data.z.length;
     //Building the path
     // var path = d3.geoPath().projection(scale(scaleX, scaleY, fisheyeX, fisheyeY));
     var path = d3.geoPath().projection(scale(scaleX, scaleY, fisheyeX, fisheyeY));
@@ -43,12 +15,22 @@ function plotContour(theGroup, data, width, height, onPlotContourComplete, fishe
     //Draw the y axis
     drawYAxis(theGroup, data.y, width, height, fisheyeY);
     //Draw one line at the end.
-    //Todo: This might overwrite the first element of the next variable
-    theGroup.append('line').attr('x1', 0).attr("y1", height).attr("x2", width).attr('y2', height)
-        .attr("stroke-width", 1).attr("stroke", 'black');
-    onPlotContourComplete(data.theVar);
+    // //Todo: This might overwrite the first element of the next variable
+    // theGroup.append('line').attr('x1', 0).attr("y1", height).attr("x2", width).attr('y2', height)
+    //     .attr("stroke-width", 1).attr("stroke", 'black');
+    onPlotContourComplete(data.variable);
 }
-
+function scale(scaleX, scaleY, fisheyeX, fisheyeY) {
+    return d3.geoTransform({
+        point: function (x, y) {
+            if (fisheyeX && fisheyeY) {
+                this.stream.point(fisheyeX(x * scaleX), fisheyeY(y * scaleY));
+            } else {
+                this.stream.point(x * scaleX, y * scaleY);
+            }
+        }
+    });
+}
 function drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, fisheyeX) {
     let xScale = d3.scaleLinear().domain(d3.extent(timeSteps)).range([0, timeLineWidth - margins.left - margins.right]);
     let timeStepData = [];
