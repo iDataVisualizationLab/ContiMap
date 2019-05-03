@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Performance test</title>
+    <script src="lib/simple-statistics.min.js"></script>
+    <script src="lib/underscore.js"></script>
+    <script src="lib/d3.js"></script>
+</head>
+<body>
+<script>
+
+    let x1 = [100, 10, 12, 12, 14, 56, 11, 2, 9, 90, 14, 56, 78, 90, 91, 92, 99, 10, 11, 20, 19, 18, 11]
+    let x2 = [10, 11, 12, 12, 15, 76, 231, 66, 91, 10, 14, 45, 70, 910, 911, 102, 91, 18, 17, 26, 79, 88, 91]
+    let total = 0;
+    const add = (a, b)=> a+b;
+    for (let i = 0; i < 30; i++) {
+        let start = new Date();
+        for (let i = 0; i < 1000000; i++) {
+            ss.sum(x2.map((x2v, i) => (x1[i] - x2v) * (x1[i] - x2v)));
+            // d3.sum(x2.map((x2v, i) => (x1[i] - x2v) * (x1[i] - x2v)));
+            // x2.map((x2v, i) => (x1[i] - x2v) * (x1[i] - x2v)).reduce(add);
+        }
+        total+= new Date()-start
+    }
+    console.log('avg:' + total);
+</script>
+</body>
+</html>

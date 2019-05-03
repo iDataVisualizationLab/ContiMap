@@ -1,7 +1,4 @@
 function plotContour(theGroup, data, width, height, onPlotContourComplete, fisheyeX, fisheyeY) {
-    debugger
-    //Save data to the group so we can use it later when mouse over.
-    theGroup.node().contourData = data;
     let scaleX = data.scaleX;
     let scaleY = data.scaleY;
     let colorScale = data.colorScale;

@@ -1,5 +1,4 @@
-importScripts('../constants.js','../../lib/simple-statistics.min.js', 'similarity_calc.js');
-
+importScripts('../constants.js','../../lib/d3.js', 'similarity_calc.js');
 onmessage = function(e){
     let results = [];
     let part = e.data;

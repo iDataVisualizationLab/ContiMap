@@ -3,18 +3,13 @@
  * @param data will have the format as [{'source': source, 'target': target, 'weight': similarity }, {}]
  */
 function maximumPath(machines, links) {
-    //Order the weights by ascending order.
+    // Order the weights by ascending order.
     links.sort((a, b) => a.weight - b.weight);
-    let sequence;
-    if (oneWay) {
-        sequence = oneWayOrdering(links, machines);
-    } else {
-        sequence = twoWayOrdering(links, machines);
-    }
+    let sequence = oneWayOrdering(machines, links);
     return sequence;
 }
 
-function twoWayOrdering(links, machines) {
+function twoWayOrdering(machines, links) {
     let sequence = [];
     let topLink = links[0];
     let left = topLink.source;
@@ -89,34 +84,31 @@ function twoWayOrdering(links, machines) {
     return sequence;
 }
 
-function oneWayOrdering(links, machines) {
+
+function oneWayOrdering(machines, links) {
+    let machinesLength = machines.length;
     let sequence = [];
     let topLink = links[0];
     sequence.push(topLink.source);
     sequence.push(topLink.target);
-    //Todo: May drop this for better performance, in that case we need to copy the links to avoid modifying it.
     let prev = topLink.target;
     let expand;
     topLink.visited = true;
-    while (true) {
+    while (sequence.length !== machinesLength) {
         expand = links.find(l =>
             !l.visited && (
                 (l.source === prev && sequence.indexOf(l.target) < 0) ||
                 (l.target === prev && sequence.indexOf(l.source) < 0)
             )
         );
-        expand.visited = true;
         if (expand.source === prev) {
             sequence.push(expand.target);
             prev = expand.target;
-        } else if (expand.target === prev) {
+        } else {
             sequence.push(expand.source);
             prev = expand.source;
         }
-        //If all nodes are put then finish
-        if (sequence.length === machines.length) {
-            break;
-        }
+        expand.visited = true;
     }
     return sequence;
 }
