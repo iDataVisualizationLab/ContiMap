@@ -40,7 +40,8 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
     //Get the size and set the sizes
 
     width = Math.max(Math.round(window.innerWidth * 2 / 3), timeSteps.length);
-    height = Math.max(window.innerHeight, machines.length);
+    // height = Math.max(window.innerHeight, machines.length);
+    height = machines.length;
     pixelsPerColumn = Math.ceil(width / timeSteps.length);
     //TODO: Note: This is used for sampling of the ticks => may need to check this. When we change the number of rows to be smaller than number of machines (less than a pixel per row)
     pixelsPerRow = Math.ceil(height / machines.length);
