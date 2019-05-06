@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="lib/d3.js"></script>
+    <script src="lib/underscore.js"></script>
+    <script src="lib/simple-statistics.min.js"></script>
+    <script src="lib/jquery.js"></script>
+    <script src="lib/fisheye.js"></script>
+
+    <script src="scripts/constants.js"></script>
+    <script src="scripts/workers/webworker.js"></script>
+    <script src="scripts/workers/similarityorder_calc.js"></script>
+    <script src="scripts/contourplot.js"></script>
+    <title>nD Heatmap</title>
+    <style>
+        @import 'css/floatingBox.css';
+        @import 'css/floatingbutton.css';
+        @import "css/main.css";
+
+    </style>
+</head>
+<body>
+<div id="configurationContainer" class="floatingBox">
+    <div id="configurationContainerHeader" class="floatingBoxHeader"><span class="floatingBoxButton"
+                                                                           onclick="closeFloatingBox('btnConfiguration', 'configurationContainer')">[-]</span>
+        Configuration
+    </div>
+    <div class="floatingBoxContent">
+        <br/>
+        <b>Settings</b><br/>
+        <div id="settingDiv"></div>
+        <br/>
+        <b>Calculations</b><br/>
+        <table id="calculationTbl" style="background-color: white"></table>
+        <br/>
+        <b>Contour info</b><br/>
+        <table id="contourTbl" style="background-color: white"></table>
+    </div>
+</div>
+<div id="contours">
+    <div id="timeLineDiv"></div>
+    <div id="contourDiv"></div>
+</div>
+<!--section for the buttons-->
+<a id="btnConfiguration" class="tab tab_right" style="opacity: 0.0;"
+   onclick="openFloatingBox('btnConfiguration', 'configurationContainer')"><img src="images/tabicon.gif" alt="">Configuration<span
+        class="screen_reader"> Will open a new window</span></a>
+
+<script src="scripts/main.js"></script>
+<script src="scripts/floatingBox.js"></script>
+</body>
+</html>
