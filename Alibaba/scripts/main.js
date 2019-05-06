@@ -40,15 +40,16 @@ d3.json('data/albbcpu1200s.json').then(data => {
     //Get the size and set the sizes
 
     width = Math.max(Math.round(window.innerWidth * 2 / 3), timeSteps.length);
-    height = Math.max(window.innerHeight, machines.length);
+    // height = Math.max(window.innerHeight, machines.length);
+    height = 1000;
     pixelsPerColumn = Math.ceil(width / timeSteps.length);
     //TODO: Note: This is used for sampling of the ticks => may need to check this. When we change the number of rows to be smaller than number of machines (less than a pixel per row)
-    pixelsPerRow = Math.ceil(height / machines.length);
-
+    // pixelsPerRow = Math.ceil(height / machines.length);
+    // pixelsPerRow = 1;
 
     //We need to make sure that the width is divisible by the timeSteps, and height is divisible by machines
     width = pixelsPerColumn * timeSteps.length;
-    height = pixelsPerRow * machines.length;
+    // height = pixelsPerRow * machines.length;
 
     fisheyeX = fisheye.scale(d3.scaleIdentity).domain([0, width]).focus(width / 2);
     fisheyeY = fisheye.scale(d3.scaleIdentity).domain([0, height]).focus(height / 2);
