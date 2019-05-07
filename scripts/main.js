@@ -169,7 +169,6 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
         });
 
         function onSimilarityResult(evt) {
-
             similarityResultCounter += 1;
             similarityResults = similarityResults.concat(evt);
             if (similarityResultCounter === similarityParts.length) {
@@ -183,220 +182,135 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
                 }]);
             }
         }
-
-        function onCompleteSimilarityCal(similarityResults) {
-            let orderParts = VARIABLES.map((theVar) => {
-                return similarityResults.map(similarity => {
-                    return {
-                        source: similarity.source,
-                        target: similarity.target,
-                        weight: similarity.weights[theVar]
-                    }
-                });
+    }
+    function onCompleteSimilarityCal(similarityResults) {
+        let orderParts = VARIABLES.map((theVar) => {
+            return similarityResults.map(similarity => {
+                return {
+                    source: similarity.source,
+                    target: similarity.target,
+                    weight: similarity.weights[theVar]
+                }
             });
-            orderParts.forEach((part, i) => {
-                //Build the best order.
-                startWorker('scripts/workers/similarityorder_worker.js', {
-                    theVar: VARIABLES[i],
-                    machines: machines,
-                    links: part
-                }, onOrderResult, i);
-            });
-            let orderingResultCounter = 0;
+        });
+        orderParts.forEach((part, i) => {
+            //Build the best order.
+            startWorker('scripts/workers/similarityorder_worker.js', {
+                theVar: VARIABLES[i],
+                machines: machines,
+                links: part
+            }, onOrderResult, i);
+        });
+        let orderingResultCounter = 0;
 
-            let totalDraws = VARIABLES.length;
-            let drawingResultCounter = 0;
+        let totalDraws = VARIABLES.length;
+        let drawingResultCounter = 0;
 
-            function onOrderResult(orderResults) {
-                orderingResultCounter += 1;
-                if (orderingResultCounter === orderParts.length) {
-                    doneOrdering = new Date();
-                    addInfoRow(calculationTbl, [{innerHTML: 'Done ordering'}, {
-                        innerHTML: numberWithCommas(doneOrdering - doneSimilarityCalc) + 'ms',
-                        styles: [{key: 'textAlign', value: 'right'}]
-                    }]);
-                    resetWorkers();
-                }
-                let theVar = orderResults.variable;
+        function onOrderResult(orderResults) {
 
-                let startDrawing = new Date();
-                let theGroup = d3.select(`#contourPlot${VARIABLES.indexOf(theVar)}`);
-                let order = orderResults.order;
-
-                //Building the data
-                let y = order;
-                let z = [];
-                order.forEach(machine => {
-                    z.push(machineTimeObject[machine].map(st => st[theVar]));
-                });
-                let flatZ = z.flat();
-                let min = d3.min(flatZ) - 1;
-                // let min = d3.mean(flatZ);
-                let max = d3.max(flatZ);
-                let numOfRanges = 5;
-                let range = (max - min) / numOfRanges;
-                let thresholds = [];
-                for (let i = 0; i < numOfRanges; i++) {
-                    thresholds.push(min + i * range);
-                }
-                let colors = thresholds.map(v => colorSchemes[theVar](v / max));
-
-                // Blue to red scheme
-                // let thresholds = [10e-3, 40, 60, 80, 90];
-                // let colors = ['#455bdc', '#9faad3', '#e39968', '#c53c33', '#b20a1c'];
-
-
-                let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
-                allColorScales[theVar] = colorScale;
-                let contours = d3.contours().thresholds(thresholds).size([z[0].length, z.length]).smooth(smooth)(z.flat());
-                //This section store the contours for area calculation later-on.
-                contours.forEach((ct, i) => {
-                        let dt = {
-                            variable: theVar,
-                            layerIndex: i,
-                            coordinates: ct.coordinates,
-                            layerValue: ct.value
-                        }
-                        allContours.push(dt);
-                    }
-                );
-                let scaleX = width / z[0].length;
-                let scaleY = height / z.length;
-
-                let contourData = {
-                    contours: contours,
-                    scaleX: scaleX,
-                    scaleY: scaleY,
-                    colorScale: colorScale,
-                    variable: theVar,
-                    y: y
-                };
-                //Save it to use later when mouseover.
-                theGroup.node().contourData = contourData;
-                plotContour(theGroup, contourData, width, height, onDrawingCompleted);
-
-                function onDrawingCompleted(theVar) {
-
-                    drawingResultCounter += 1;
-                    //Done all drawing, start processing the contour area calculation.
-                    let totalPolygonLayerCount = allContours.length;
-                    let polygonLayerResultCounter = 0;
-                    let allContourAreas = [];
-                    if (totalDraws === drawingResultCounter) {
-                        //Start calculating from here
-                        allContours.forEach((cl, i) => {
-                            startWorker('scripts/workers/area_worker.js', cl, onLayerAreaResult, i);
-                        });
-                        //Also we only setup the svg mouse move when all the drawings are done
-                        setupMouseMove();
-                    }
-
-                    /**
-                     *
-                     * @param result result will have this format {variable: theVar, layerIndex: layerIndex, 'areas': results, layerValue: layerValue}
-                     */
-                    function onLayerAreaResult(result) {
-                        allContourAreas.push(result);
-                        polygonLayerResultCounter += 1;
-                        if (polygonLayerResultCounter === totalPolygonLayerCount) {
-                            resetWorkers();
-                            //Display contour info area.
-                            displayContourAreasInfo(allContourAreas);
-                            //After all, process the sticky now here (since once done display we will have the offset information.
-                            setupScrollStickyTimeLine();
-                        }
-                    }
-                }
-
-                let doneDrawing = new Date();
-                addInfoRow(calculationTbl, [{innerHTML: `Done drawing ${theVar}`}, {
-                    innerHTML: numberWithCommas(doneDrawing - startDrawing) + 'ms',
+            orderingResultCounter += 1;
+            if (orderingResultCounter === orderParts.length) {
+                doneOrdering = new Date();
+                addInfoRow(calculationTbl, [{innerHTML: 'Done ordering'}, {
+                    innerHTML: numberWithCommas(doneOrdering - doneSimilarityCalc) + 'ms',
                     styles: [{key: 'textAlign', value: 'right'}]
                 }]);
-
+                resetWorkers();
             }
-
+            processOrderResults(orderResults);
         }
-    }
+        function processOrderResults(orderResults) {
+            let theVar = orderResults.variable;
+            let startDrawing = new Date();
+            let theGroup = d3.select(`#contourPlot${VARIABLES.indexOf(theVar)}`);
+            let order = orderResults.order;
 
-    function displayContourAreasInfo(allContourAreas) {
-        let theTbl = document.getElementById('contourTbl');
-        allContourAreas.sort((a, b) => {
-            return a.variable !== b.variable ? a.variable.localeCompare(b.variable) : a.layerIndex - b.layerIndex;
-        });
-        let nestedByVariable = d3.nest().key(d => d.variable).entries(allContourAreas);
+            //Building the data
+            let y = order;
+            let z = [];
+            order.forEach(machine => {
+                z.push(machineTimeObject[machine].map(st => st[theVar]));
+            });
+            let flatZ = z.flat();
+            let min = d3.min(flatZ) - 1;
+            // let min = d3.mean(flatZ);
+            let max = d3.max(flatZ);
+            let numOfRanges = 5;
+            let range = (max - min) / numOfRanges;
+            let thresholds = [];
+            for (let i = 0; i < numOfRanges; i++) {
+                thresholds.push(min + i * range);
+            }
+            let colors = thresholds.map(v => colorSchemes[theVar](v / max));
 
-        nestedByVariable.forEach(variable => {
-            variable.values.forEach((vl, i) => {
-                let row = [];
-                if (i === 0) {
-                    //Variable name is expanded in all rows + 1 for the total
-                    row.push({
-                        innerHTML: vl.variable,
-                        attributes: [{key: 'rowspan', value: variable.values.length + 1}]
-                    });
-                    //Label is extended in all rows
-                    row.push({
-                        innerHTML: 'Layer value',
-                        attributes: [{key: 'rowspan', value: variable.values.length}]
-                    });
+            let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
+            allColorScales[theVar] = colorScale;
+            let contours = d3.contours().thresholds(thresholds).size([z[0].length, z.length]).smooth(smooth)(z.flat());
+            //This section store the contours for area calculation later-on.
+            contours.forEach((ct, i) => {
+                    let dt = {
+                        variable: theVar,
+                        layerIndex: i,
+                        coordinates: ct.coordinates,
+                        layerValue: ct.value
+                    }
+                    allContours.push(dt);
                 }
-                row.push({
-                    innerHTML: numberWithCommas(Math.round(vl.layerValue)),
-                    styles: [{
-                        key: 'backgroundColor',
-                        value: allColorScales[vl.variable](vl.layerValue)
-                    }, {key: 'textAlign', value: 'right'}]
-                })
-                if (i == 0) {
-                    //Label is extended in all rows
-                    row.push({
-                        innerHTML: 'Area count',
-                        attributes: [{key: 'rowspan', value: variable.values.length}]
-                    });
-                }
-                row.push({
-                    innerHTML: vl.areas.length,
-                    styles: [{
-                        key: 'backgroundColor',
-                        value: allColorScales[vl.variable](vl.layerValue)
-                    }, {key: 'textAlign', value: 'right'}]
-                });
-                if (i == 0) {
-                    //Label is extended in all rows
-                    row.push({
-                        innerHTML: 'Area subtotal',
-                        attributes: [{key: 'rowspan', value: variable.values.length}]
-                    });
-                }
-                row.push({
-                    innerHTML: numberWithCommas(Math.round(d3.sum(vl.areas))),
-                    styles: [{
-                        key: 'backgroundColor',
-                        value: allColorScales[vl.variable](vl.layerValue)
-                    }, {key: 'textAlign', value: 'right'}]
-                });
-                addInfoRow(theTbl, row);
-            });
-            //Add row for the total
-            let totalR = [];
-            //Total layers
-            totalR.push({innerHTML: 'Ranges count', styles: [{key: 'font-weight', value: 'bold'}]});
-            totalR.push({innerHTML: variable.values.length, styles: [{key: 'textAlign', value: 'right'}]});
-            //Total Area count
-            totalR.push({innerHTML: 'Total', styles: [{key: 'font-weight', value: 'bold'}]});
-            totalR.push({
-                innerHTML: d3.sum(variable.values.map(vl => vl.areas.length)),
+            );
+            let scaleX = width / z[0].length;
+            let scaleY = height / z.length;
+
+            let contourData = {
+                contours: contours,
+                scaleX: scaleX,
+                scaleY: scaleY,
+                colorScale: colorScale,
+                variable: theVar,
+                y: y
+            };
+            //Save it to use later when mouseover.
+            theGroup.node().contourData = contourData;
+            plotContour(theGroup, contourData, width, height, onDrawingCompleted);
+
+            let doneDrawing = new Date();
+            addInfoRow(calculationTbl, [{innerHTML: `Done drawing ${theVar}`}, {
+                innerHTML: numberWithCommas(doneDrawing - startDrawing) + 'ms',
                 styles: [{key: 'textAlign', value: 'right'}]
-            });
-            //Total Area count
-            totalR.push({innerHTML: 'Total', styles: [{key: 'font-weight', value: 'bold'}]});
-            totalR.push({
-                innerHTML: numberWithCommas(d3.sum(variable.values.map(vl => Math.round(d3.sum(vl.areas))))),
-                styles: [{key: 'textAlign', value: 'right'}]
-            });
-            addInfoRow(theTbl, totalR);
-        });
+            }]);
+
+            function onDrawingCompleted(theVar) {
+
+                drawingResultCounter += 1;
+                //Done all drawing, start processing the contour area calculation.
+                let totalPolygonLayerCount = allContours.length;
+                let polygonLayerResultCounter = 0;
+                let allContourAreas = [];
+                if (totalDraws === drawingResultCounter) {
+                    //Start calculating from here
+                    allContours.forEach((cl, i) => {
+                        startWorker('scripts/workers/area_worker.js', cl, onLayerAreaResult, i);
+                    });
+                    //Also we only setup the svg mouse move when all the drawings are done
+                    setupMouseMove();
+                }
+
+                /**
+                 *
+                 * @param result result will have this format {variable: theVar, layerIndex: layerIndex, 'areas': results, layerValue: layerValue}
+                 */
+                function onLayerAreaResult(result) {
+                    allContourAreas.push(result);
+                    polygonLayerResultCounter += 1;
+                    if (polygonLayerResultCounter === totalPolygonLayerCount) {
+                        resetWorkers();
+                        //Display contour info area.
+                        displayContourAreasInfo(allContourAreas);
+                        //After all, process the sticky now here (since once done display we will have the offset information.
+                        setupScrollStickyTimeLine();
+                    }
+                }
+            }
+        }
     }
 
     function setupMouseMove() {
@@ -424,6 +338,86 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
         });
     }
 });
+
+function displayContourAreasInfo(allContourAreas) {
+    let theTbl = document.getElementById('contourTbl');
+    allContourAreas.sort((a, b) => {
+        return a.variable !== b.variable ? a.variable.localeCompare(b.variable) : a.layerIndex - b.layerIndex;
+    });
+    let nestedByVariable = d3.nest().key(d => d.variable).entries(allContourAreas);
+
+    nestedByVariable.forEach(variable => {
+        variable.values.forEach((vl, i) => {
+            let row = [];
+            if (i === 0) {
+                //Variable name is expanded in all rows + 1 for the total
+                row.push({
+                    innerHTML: vl.variable,
+                    attributes: [{key: 'rowspan', value: variable.values.length + 1}]
+                });
+                //Label is extended in all rows
+                row.push({
+                    innerHTML: 'Layer value',
+                    attributes: [{key: 'rowspan', value: variable.values.length}]
+                });
+            }
+            row.push({
+                innerHTML: numberWithCommas(Math.round(vl.layerValue)),
+                styles: [{
+                    key: 'backgroundColor',
+                    value: allColorScales[vl.variable](vl.layerValue)
+                }, {key: 'textAlign', value: 'right'}]
+            })
+            if (i == 0) {
+                //Label is extended in all rows
+                row.push({
+                    innerHTML: 'Area count',
+                    attributes: [{key: 'rowspan', value: variable.values.length}]
+                });
+            }
+            row.push({
+                innerHTML: vl.areas.length,
+                styles: [{
+                    key: 'backgroundColor',
+                    value: allColorScales[vl.variable](vl.layerValue)
+                }, {key: 'textAlign', value: 'right'}]
+            });
+            if (i == 0) {
+                //Label is extended in all rows
+                row.push({
+                    innerHTML: 'Area subtotal',
+                    attributes: [{key: 'rowspan', value: variable.values.length}]
+                });
+            }
+            row.push({
+                innerHTML: numberWithCommas(Math.round(d3.sum(vl.areas))),
+                styles: [{
+                    key: 'backgroundColor',
+                    value: allColorScales[vl.variable](vl.layerValue)
+                }, {key: 'textAlign', value: 'right'}]
+            });
+            addInfoRow(theTbl, row);
+        });
+        //Add row for the total
+        let totalR = [];
+        //Total layers
+        totalR.push({innerHTML: 'Ranges count', styles: [{key: 'font-weight', value: 'bold'}]});
+        totalR.push({innerHTML: variable.values.length, styles: [{key: 'textAlign', value: 'right'}]});
+        //Total Area count
+        totalR.push({innerHTML: 'Total', styles: [{key: 'font-weight', value: 'bold'}]});
+        totalR.push({
+            innerHTML: d3.sum(variable.values.map(vl => vl.areas.length)),
+            styles: [{key: 'textAlign', value: 'right'}]
+        });
+        //Total Area count
+        totalR.push({innerHTML: 'Total', styles: [{key: 'font-weight', value: 'bold'}]});
+        totalR.push({
+            innerHTML: numberWithCommas(d3.sum(variable.values.map(vl => Math.round(d3.sum(vl.areas))))),
+            styles: [{key: 'textAlign', value: 'right'}]
+        });
+        addInfoRow(theTbl, totalR);
+    });
+}
 
 function setupScrollStickyTimeLine() {
     window.onscroll = processScroll;

@@ -84,6 +84,11 @@ function twoWayOrdering(machines, links) {
     return sequence;
 }
 
+function nWayOrdering(machines, links){
+    let sequence = {};
+    //Initialize
+    machines.forEach(mc=>sequence[mc] = {});
+}
 
 function oneWayOrdering(machines, links) {
     let machinesLength = machines.length;
