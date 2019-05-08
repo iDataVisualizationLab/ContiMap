@@ -1,20 +1,19 @@
-importScripts('../constants.js','../../lib/d3.js', 'similarity_calc.js');
-onmessage = function(e){
+importScripts('../constants.js', 'similarity_calc.js');
+onmessage = function (e) {
     let results = [];
     let part = e.data;
-    part.forEach(sd=>{
-        let x1 = sd.x1;
-        let x2 = sd.x2;
-        let source = x1[0][FIELD_MACHINE_ID];
-        let target = x2[0][FIELD_MACHINE_ID];
-        let similarities = {}
-        VARIABLES.forEach(theVar=>{
-            let x = x1.map(d=>d[theVar]);
-            let y = x2.map(d=>d[theVar]);
-            let similarity = calculateSimilarity(x, y);
+    let x1, x2, source, target, similarities, similarity;
+    part.forEach(sd => {
+        x1 = sd.x1;
+        x2 = sd.x2;
+        source = x1[0][FIELD_MACHINE_ID];
+        target = x2[0][FIELD_MACHINE_ID];
+        similarities = {}
+        VARIABLES.forEach(theVar => {
+            similarity = calculateSimilarity(x1.map(d => d[theVar]), x2.map(d => d[theVar]));
             similarities[theVar] = similarity;
         });
-        results.push({'source': source, 'target': target, 'weights': similarities });
+        results.push({'source': source, 'target': target, 'weights': similarities});
     });
     postMessage(results);
 }

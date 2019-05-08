@@ -4,7 +4,15 @@ if(stepPenalty){
 }
 function sseNoPenalty(x1, x2) {
     //TODO: Consider to normalize the values, the reason is that difference in a big scale => is very big => or this is sensitive to outlying values. => So it doesn't favor the large values?
-    return d3.sum(x2.map((x2v, i) => (x1[i] - x2v) * (x1[i] - x2v)));
+    // return d3.sum(x2.map((x2v, i) => (x1[i] - x2v) * (x1[i] - x2v)));
+    let sum = 0;
+    let sub;
+    let length = x1.length;
+    for (let i = 0; i < length; ++i) {
+        sub = (x1[i]-x2[i]);
+        sum += sub*sub;
+    }
+    return sum;
 }
 
 function sseStepPenalty(x1, x2) {

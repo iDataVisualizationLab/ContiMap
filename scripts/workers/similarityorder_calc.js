@@ -4,19 +4,110 @@
  */
 function maximumPath(machines, links) {
     // Order the weights by ascending order.
+    // return oneWayOrdering1(machines, links);
+    // return oneWayOrdering2(machines, links);
+    // return oneWayOrdering3(machines, links);
+    return twoWayOrdering(machines, links);
+}
+
+function oneWayOrdering1(machines, links) {
     links.sort((a, b) => a.weight - b.weight);
-    let sequence = oneWayOrdering(machines, links);
+    let machinesLength = machines.length;
+    let sequence = [];
+    let topLink = links[0];
+    sequence.push(topLink.source);
+    sequence.push(topLink.target);
+    let prev = topLink.target;
+    let expand;
+    topLink.visited = true;
+    while (sequence.length !== machinesLength) {
+        expand = links.find(l =>
+            !l.visited && (
+                (l.source === prev && sequence.indexOf(l.target) < 0) ||
+                (l.target === prev && sequence.indexOf(l.source) < 0)
+            )
+        );
+        if (expand.source === prev) {
+            sequence.push(expand.target);
+            prev = expand.target;
+        } else {
+            sequence.push(expand.source);
+            prev = expand.source;
+        }
+        expand.visited = true;
+    }
+    return sequence;
+}
+
+function oneWayOrdering2(machines, links) {
+    let machineObject = {};
+    machines.forEach(mc => {
+        machineObject[mc] = [];
+    });
+    links.forEach(l => {
+        machineObject[l.source].push({machine: l.target, weight: l.weight});
+        machineObject[l.target].push({machine: l.source, weight: l.weight});
+    });
+
+    //Start from the first one.
+    let sequence = [];
+    //Start from the first machine
+    sequence.push(machines[0]);
+    let prev = machines[0];
+    let machineRow;
+    let minVal;
+    while (sequence.length < machines.length) {
+        //find the minimum next node
+        machineRow = machineObject[prev];
+        minVal = Number.MAX_SAFE_INTEGER;
+        prev = null;
+        for (let i = 0; i < machineRow.length; i++) {
+            let mc = machineRow[i];
+            if (minVal > mc.weight && sequence.indexOf(mc.machine) < 0) {
+                minVal = mc.weight;
+                prev = mc.machine;
+            }
+        }
+        sequence.push(prev);
+    }
+    return sequence;
+}
+
+function oneWayOrdering3(machines, links) {
+    let machineObject = {};
+    machines.forEach(mc => {
+        machineObject[mc] = [];
+    });
+    links.forEach(l => {
+        machineObject[l.source].push({machine: l.target, weight: l.weight});
+        machineObject[l.target].push({machine: l.source, weight: l.weight});
+    });
+    //We sort => then we only need to find the first one which is not in the sequence.
+    machines.forEach(mc => {
+        machineObject[mc].sort((a, b) => a.weight - b.weight);
+    });
+    //Start from the first one.
+    let sequence = [];
+    //Start from the first machine
+    sequence.push(machines[0]);
+    let prev = machines[0];
+    let machinesLength = machines.length;
+    while (sequence.length < machinesLength) {
+        //find the minimum next node
+        prev = machineObject[prev].find(mc => sequence.indexOf(mc.machine) < 0).machine;
+        sequence.push(prev);
+    }
     return sequence;
 }
 
 function twoWayOrdering(machines, links) {
+    links.sort((a, b) => a.weight - b.weight);
     let sequence = [];
     let topLink = links[0];
     let left = topLink.source;
     let right = topLink.target;
     sequence.unshift(left);
     sequence.push(right);
-    //Todo: May drop this for better performance, in that case we need to copy the links to avoid modifying it.
     topLink.visited = true;
     let leftExpandValue = Number.POSITIVE_INFINITY;
     let rightExpandValue = Number.POSITIVE_INFINITY;
@@ -84,36 +175,53 @@ function twoWayOrdering(machines, links) {
     return sequence;
 }
 
-function nWayOrdering(machines, links){
+function nWayOrdering(machines, links) {
+    links.sort((a, b) => a.weight - b.weight);
     let sequence = {};
     //Initialize
-    machines.forEach(mc=>sequence[mc] = {});
+    machines.forEach(mc => sequence[mc] = {});
 }
-
-function oneWayOrdering(machines, links) {
-    let machinesLength = machines.length;
-    let sequence = [];
-    let topLink = links[0];
-    sequence.push(topLink.source);
-    sequence.push(topLink.target);
-    let prev = topLink.target;
-    let expand;
-    topLink.visited = true;
-    while (sequence.length !== machinesLength) {
-        expand = links.find(l =>
-            !l.visited && (
-                (l.source === prev && sequence.indexOf(l.target) < 0) ||
-                (l.target === prev && sequence.indexOf(l.source) < 0)
-            )
-        );
-        if (expand.source === prev) {
-            sequence.push(expand.target);
-            prev = expand.target;
-        } else {
-            sequence.push(expand.source);
-            prev = expand.source;
-        }
-        expand.visited = true;
+/**
+ * This is a simple list with only basic condition checking for better performance
+ */
+class LinkedList {
+    constructor(head, tail) {
+        this.head = head;
+        this.tail = tail;
+        this.head.next = this.tail;
     }
-    return sequence;
+
+    contains(node) {
+        let n = this.head;
+        while (n.next) {
+            if (n === node) {
+                return true;
+            }
+            n = n.next;
+        }
+        return false;
+    }
+
+    addToHead(node) {
+        node.next = this.head;
+        this.head = node;
+    }
+
+    addToTail(node) {
+        this.tail.next = node;
+        this.tail = node;
+    }
+
+    size() {
+        let n = this.head;
+        let counter = 1;
+        while (n.next) {
+            counter += 1;
+            n = n.next;
+        }
+    }
+    joinToTail(anotherList){
+        this.tail.next = anotherList.head;
+        this.tail = anotherList.tail;
+    }
 }

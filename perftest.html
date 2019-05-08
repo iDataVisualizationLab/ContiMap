@@ -14,12 +14,20 @@
     let x2 = [10, 11, 12, 12, 15, 76, 231, 66, 91, 10, 14, 45, 70, 910, 911, 102, 91, 18, 17, 26, 79, 88, 91]
     let total = 0;
     const add = (a, b)=> a+b;
+    let length = x1.length;
     for (let i = 0; i < 30; i++) {
         let start = new Date();
-        for (let i = 0; i < 1000000; i++) {
-            ss.sum(x2.map((x2v, i) => (x1[i] - x2v) * (x1[i] - x2v)));
+        for (let i = 0; i < 5000000; i++) {
+            // ss.sum(x2.map((x2v, i) => (x1[i] - x2v) * (x1[i] - x2v)));
             // d3.sum(x2.map((x2v, i) => (x1[i] - x2v) * (x1[i] - x2v)));
             // x2.map((x2v, i) => (x1[i] - x2v) * (x1[i] - x2v)).reduce(add);
+            let sum = 0;
+            let sub;
+
+            for (let j = 0; j < length; ++j) {
+                sub = (x1[i]-x2[i]);
+                sum += sub*sub;
+            }
         }
         total+= new Date()-start
     }

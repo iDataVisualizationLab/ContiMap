@@ -14,14 +14,14 @@ addInfoHTML(settingDiv, settingTblStr);
 let startTime = new Date(),
     donePreprocess, doneResampling, doneSimilarityCalc, doneOrdering;
 
-// d3.json('data/albbcpu1200s.json').then(data => {
+d3.json('data/albbcpu1200s.json').then(data => {
 // d3.json('data/albbcpu2400s.json').then(data => {
 // //Remove _id field
 // data.forEach(d => delete d['_id']);
 // d3.json('data/HPCC_04Oct2018.json').then(data => {
 // d3.json('data/HPCC_21Mar2019.json').then(data => {
 // d3.json('data/HPCC_21Mar2019210.json').then(data => {
-d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
+// d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
     const nestedByMachines = d3.nest().key(d => d[FIELD_MACHINE_ID]).entries(data);
     //Calculate the max cpu usage
     nestedByMachines.forEach(mc => {
@@ -182,7 +182,9 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
                 }]);
             }
         }
+
     }
+
     function onCompleteSimilarityCal(similarityResults) {
         let orderParts = VARIABLES.map((theVar) => {
             return similarityResults.map(similarity => {
@@ -219,6 +221,7 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
             }
             processOrderResults(orderResults);
         }
+
         function processOrderResults(orderResults) {
             let theVar = orderResults.variable;
             let startDrawing = new Date();
@@ -371,7 +374,7 @@ function displayContourAreasInfo(allContourAreas) {
             if (i == 0) {
                 //Label is extended in all rows
                 row.push({
-                    innerHTML: 'Area count',
+                    innerHTML: 'Blob count',
                     attributes: [{key: 'rowspan', value: variable.values.length}]
                 });
             }
