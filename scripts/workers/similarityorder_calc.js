@@ -6,8 +6,9 @@ function maximumPath(machines, links) {
     // Order the weights by ascending order.
     // return oneWayOrdering1(machines, links);
     // return oneWayOrdering2(machines, links);
-    // return oneWayOrdering3(machines, links);
-    return twoWayOrdering(machines, links);
+    return oneWayOrdering3(machines, links);
+    // return twoWayOrdering(machines, links);
+    // return nWayOrdering(machines, links);
 }
 
 function oneWayOrdering1(machines, links) {
@@ -177,37 +178,99 @@ function twoWayOrdering(machines, links) {
 
 function nWayOrdering(machines, links) {
     links.sort((a, b) => a.weight - b.weight);
-    let sequence = {};
-    //Initialize
-    machines.forEach(mc => sequence[mc] = {});
+    let machinesLength = machines.length;
+    let sequence = [];
+    let lists = [];
+    let currentNodes = [];
+
+    for (let i = 0; i < links.length; i++) {
+        let link = links[i];
+        let source = link.source;
+        let target = link.target;
+        let added = false;
+        for (let j = 0; j < lists.length; j++) {
+            let list = lists[j];
+            let addedNode = list.addLink(link, currentNodes);
+            if (addedNode) {
+                currentNodes.push(addedNode);
+                added = true;
+                break;
+            }
+        }
+        if (!added && (currentNodes.indexOf(source) < 0) && (currentNodes.indexOf(target) < 0)) { //Loop through all lists but can't add.
+            //Create a new list.
+            lists.push(new LinkedList(source, target));
+            currentNodes.push(source);
+            currentNodes.push(target);
+        }
+        if (!added && (currentNodes.indexOf(source) >= 0) && (currentNodes.indexOf(target) >= 0)) {
+            //Check if we can join
+        }
+        if (currentNodes.length === machinesLength) {
+            lists.forEach(list => {
+                sequence = sequence.concat(list.traverse());
+            });
+            return sequence;
+        }
+    }
+
 }
+
+function joinLists(lists, links) {
+    let parts = {};
+    lists.forEach(l=>{
+        parts[l.head.value] = l;
+        parts[l.tail.value] = l;
+    })
+    let sequences = [];
+
+    return null;
+}
+
 /**
  * This is a simple list with only basic condition checking for better performance
  */
+class Node {
+    constructor(value) {
+        this.value = value;
+        this.next = null;
+    }
+}
+
 class LinkedList {
-    constructor(head, tail) {
-        this.head = head;
-        this.tail = tail;
+    constructor(headV, tailV) {
+        this.head = new Node(headV);
+        this.tail = new Node(tailV);
         this.head.next = this.tail;
     }
 
-    contains(node) {
-        let n = this.head;
-        while (n.next) {
-            if (n === node) {
-                return true;
-            }
-            n = n.next;
+    addLink(link, currentNodes) {//Add the link but the added node must not exist in the current node.
+        let source = link.source;
+        let target = link.target;
+        if (this.head.value === source && currentNodes.indexOf(target) < 0) {
+            this.addToHead(target);
+            return target;
+        } else if (this.head.value === target && currentNodes.indexOf(source) < 0) {
+            this.addToHead(source);
+            return source;
+        } else if (this.tail.value === source && currentNodes.indexOf(target) < 0) {
+            this.addToTail(target);
+            return target;
+        } else if (this.tail.value === target && currentNodes.indexOf(source) < 0) {
+            this.addToTail(source);
+            return source;
         }
-        return false;
+        return null;
     }
 
-    addToHead(node) {
+    addToHead(nodeV) {
+        let node = new Node(nodeV);
         node.next = this.head;
         this.head = node;
     }
 
-    addToTail(node) {
+    addToTail(nodeV) {
+        let node = new Node(nodeV);
         this.tail.next = node;
         this.tail = node;
     }
@@ -220,8 +283,14 @@ class LinkedList {
             n = n.next;
         }
     }
-    joinToTail(anotherList){
-        this.tail.next = anotherList.head;
-        this.tail = anotherList.tail;
+
+
+    traverse() {
+        let n = this.head;
+        let result = [n.value];
+        while (n = n.next) {
+            result.push(n.value);
+        }
+        return result;
     }
 }
