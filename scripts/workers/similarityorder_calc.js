@@ -197,16 +197,22 @@ function nWayOrdering(machines, links) {
                 break;
             }
         }
+        //If can't add => can we join?
+        //Clean the joined list.
+
         if (!added && (currentNodes.indexOf(source) < 0) && (currentNodes.indexOf(target) < 0)) { //Loop through all lists but can't add.
             //Create a new list.
             lists.push(new LinkedList(source, target));
             currentNodes.push(source);
             currentNodes.push(target);
         }
-        if (!added && (currentNodes.indexOf(source) >= 0) && (currentNodes.indexOf(target) >= 0)) {
-            //Check if we can join
-        }
         if (currentNodes.length === machinesLength) {
+
+            //Now start joining sequence by the best link
+            if(sequence.length === machinesLength){
+                return sequence;
+            }
+
             lists.forEach(list => {
                 sequence = sequence.concat(list.traverse());
             });
@@ -216,15 +222,26 @@ function nWayOrdering(machines, links) {
 
 }
 
-function joinLists(lists, links) {
-    let parts = {};
-    lists.forEach(l=>{
-        parts[l.head.value] = l;
-        parts[l.tail.value] = l;
-    })
-    let sequences = [];
-
-    return null;
+function joinTwoLists(list1, list2, link){
+    //Allways assign the result to list1.
+    let hs = [link.head, link.source];
+    if(hs.indexOf(list1.head.value)>= 0 && hs.indexOf(list2.head) >= 0){
+        //Join head1 to head2
+        return [list1.reverseHeadTail().join(list2)];
+    }
+    if(hs.indexOf(list1.head.value)>=0 && hs.indexOf(list2.tail) >= 0){
+        //Join tail 2 to head 1
+        return [list2.join(list1)];
+    }
+    if(hs.indexOf(list1.tail.value)>= 0 && hs.indexOf(list2.head.value)>=0){
+        //Join tail 1 to head 2.
+        return [list1.join(list2)];
+    }
+    if(hs.indexOf(list1.tail.value)>=0 && hs.indexOf(list2.tail.value)){
+        //Join tail 1 to tail2
+        return [list1.join(list2.reverseHeadTail())];
+    }
+    return [list1, list2];
 }
 
 /**
@@ -284,7 +301,28 @@ class LinkedList {
         }
     }
 
-
+    reverseHeadTail(){
+        let allNodes = [];
+        let n = this.head;
+        allNodes.push(n);
+        while(n = n.next){
+            allNodes.push(n);
+        }
+        //Reverse now.
+        let nodeSize = allNodes.length;
+        this.head = allNodes[nodeSize-1];
+        n = this.head;
+        for (let i = nodeSize-2; i >= 0 ; --i) {
+            n.next = allNodes[i];
+            n = n.next;
+        }
+        n.next = null;
+        this.tail = n;
+    }
+    join(list2){
+        this.tail.next = list2.head;
+        this.tail = list2.tail;
+    }
     traverse() {
         let n = this.head;
         let result = [n.value];

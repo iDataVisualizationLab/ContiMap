@@ -14,14 +14,18 @@ addInfoHTML(settingDiv, settingTblStr);
 let startTime = new Date(),
     donePreprocess, doneResampling, doneSimilarityCalc, doneOrdering;
 
-d3.json('data/albbcpu1200s.json').then(data => {
+/**
+ * data should be in the format of {machine_id: , time_stamp: , variable1: , variable2: ...}
+ * Should go to constant.js to change these field names correspondingly.
+ */
+// d3.json('data/albbcpu1200s.json').then(data => {
 // d3.json('data/albbcpu2400s.json').then(data => {
 // //Remove _id field
 // data.forEach(d => delete d['_id']);
 // d3.json('data/HPCC_04Oct2018.json').then(data => {
 // d3.json('data/HPCC_21Mar2019.json').then(data => {
 // d3.json('data/HPCC_21Mar2019210.json').then(data => {
-// d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
+d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
     const nestedByMachines = d3.nest().key(d => d[FIELD_MACHINE_ID]).entries(data);
     //Calculate the max cpu usage
     nestedByMachines.forEach(mc => {
@@ -111,9 +115,9 @@ d3.json('data/albbcpu1200s.json').then(data => {
     //Split the data
     for (let i = 0; i < machines.length; i++) {
         //TODO: For alibaba => should check this to reduce sampling time
-        // if (machineTimeObject[machines[i]].length < timeStepsLength) {
-        resampleParts[resampleCounter % maxWorkers].push(machineTimeObject[machines[i]]);
-        resampleCounter++;
+        // if (machineTimeObject[machines[i]].length < timeSteps.length) {
+            resampleParts[resampleCounter % maxWorkers].push(machineTimeObject[machines[i]]);
+            resampleCounter++;
         // }
     }
 
@@ -276,6 +280,8 @@ d3.json('data/albbcpu1200s.json').then(data => {
             plotContour(theGroup, contourData, width, height, onDrawingCompleted);
 
             let doneDrawing = new Date();
+            //Hide the loader
+            hideLoader();
             addInfoRow(calculationTbl, [{innerHTML: `Done drawing ${theVar}`}, {
                 innerHTML: numberWithCommas(doneDrawing - startDrawing) + 'ms',
                 styles: [{key: 'textAlign', value: 'right'}]

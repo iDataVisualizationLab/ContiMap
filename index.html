@@ -17,10 +17,14 @@
         @import 'css/floatingBox.css';
         @import 'css/floatingbutton.css';
         @import "css/main.css";
-
+        @import "scripts/loader/loader.css";
     </style>
 </head>
 <body>
+<script src="scripts/loader/loader.js"></script>
+<script>
+    showLoader();
+</script>
 <div id="configurationContainer" class="floatingBox">
     <div id="configurationContainerHeader" class="floatingBoxHeader"><span class="floatingBoxButton"
                                                                            onclick="closeFloatingBox('btnConfiguration', 'configurationContainer')">[-]</span>

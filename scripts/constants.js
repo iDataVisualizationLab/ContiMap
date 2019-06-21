@@ -2,9 +2,9 @@
 const FIELD_MACHINE_ID = 'machine_id';
 const FIELD_TIME_STAMP = 'time_stamp';
 /**HPCC**/
-// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 /**Alibaba**/
-const VARIABLES = ["cpu_util_percent"];
+// const VARIABLES = ["cpu_util_percent"];
 
 /**Configuration**/
 const oneWay = true;
@@ -26,12 +26,12 @@ let fisheyeY;
 /**Contours**/
 const allContours = [];
 let allColorScales = {};
+
 function addInfoHTML(theDiv, htmlStr) {
     theDiv.innerHTML += htmlStr;
 }
 
 /**
- *
  * @param theTbl
  * @param rowDt should be in the format of []
  */
@@ -39,7 +39,6 @@ function addInfoRow(theTbl, rowDt) {
     let row = theTbl.insertRow();
     rowDt.forEach(cellDt => {
         let cell = row.insertCell();
-
         cell.innerHTML = cellDt.innerHTML;
         //Apply options if there is.
         if (cellDt.styles) {
@@ -47,9 +46,9 @@ function addInfoRow(theTbl, rowDt) {
                 cell.style[style.key] = style.value;
             });
         }
-        if(cellDt.attributes){
-            cellDt.attributes.forEach(att=>{
-               cell.setAttribute(att.key, att.value);
+        if (cellDt.attributes) {
+            cellDt.attributes.forEach(att => {
+                cell.setAttribute(att.key, att.value);
             });
         }
     });
