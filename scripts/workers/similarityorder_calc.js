@@ -4,15 +4,16 @@
  */
 function maximumPath(machines, links) {
     // Order the weights by ascending order.
-    // return oneWayOrdering1(machines, links);
+    return oneWayOrdering1(machines, links);
     // return oneWayOrdering2(machines, links);
-    return oneWayOrdering3(machines, links);
+    // return oneWayOrdering3(machines, links);
     // return twoWayOrdering(machines, links);
     // return nWayOrdering(machines, links);
 }
 
 function oneWayOrdering1(machines, links) {
     links.sort((a, b) => a.weight - b.weight);
+
     let machinesLength = machines.length;
     let sequence = [];
     let topLink = links[0];
@@ -21,22 +22,35 @@ function oneWayOrdering1(machines, links) {
     let prev = topLink.target;
     let expand;
     topLink.visited = true;
+    let jumpCounter = 0;
     while (sequence.length !== machinesLength) {
         expand = links.find(l =>
-            !l.visited && (
+            !l.visited &&
+            (
                 (l.source === prev && sequence.indexOf(l.target) < 0) ||
                 (l.target === prev && sequence.indexOf(l.source) < 0)
             )
         );
-        if (expand.source === prev) {
-            sequence.push(expand.target);
-            prev = expand.target;
+        //Check here for this case: https://docs.google.com/spreadsheets/d/1prlex_kzODa8YFgnM2FwJwj_5ctJ1C2xm2FyGZq2sZM/edit#gid=0
+        if (!expand) {
+            jumpCounter++;
+            //Next node
+            let nextNode = machines[(machines.indexOf(prev)+1)%machinesLength];
+            sequence.push(nextNode);
+            prev = nextNode;
         } else {
-            sequence.push(expand.source);
-            prev = expand.source;
+            if (expand.source === prev) {
+                sequence.push(expand.target);
+                prev = expand.target;
+            } else {
+                sequence.push(expand.source);
+                prev = expand.source;
+            }
+            expand.visited = true;
         }
-        expand.visited = true;
+
     }
+    // let sequence = machines;
     return sequence;
 }
 
@@ -209,7 +223,7 @@ function nWayOrdering(machines, links) {
         if (currentNodes.length === machinesLength) {
 
             //Now start joining sequence by the best link
-            if(sequence.length === machinesLength){
+            if (sequence.length === machinesLength) {
                 return sequence;
             }
 
@@ -222,22 +236,22 @@ function nWayOrdering(machines, links) {
 
 }
 
-function joinTwoLists(list1, list2, link){
+function joinTwoLists(list1, list2, link) {
     //Allways assign the result to list1.
     let hs = [link.head, link.source];
-    if(hs.indexOf(list1.head.value)>= 0 && hs.indexOf(list2.head) >= 0){
+    if (hs.indexOf(list1.head.value) >= 0 && hs.indexOf(list2.head) >= 0) {
         //Join head1 to head2
         return [list1.reverseHeadTail().join(list2)];
     }
-    if(hs.indexOf(list1.head.value)>=0 && hs.indexOf(list2.tail) >= 0){
+    if (hs.indexOf(list1.head.value) >= 0 && hs.indexOf(list2.tail) >= 0) {
         //Join tail 2 to head 1
         return [list2.join(list1)];
     }
-    if(hs.indexOf(list1.tail.value)>= 0 && hs.indexOf(list2.head.value)>=0){
+    if (hs.indexOf(list1.tail.value) >= 0 && hs.indexOf(list2.head.value) >= 0) {
         //Join tail 1 to head 2.
         return [list1.join(list2)];
     }
-    if(hs.indexOf(list1.tail.value)>=0 && hs.indexOf(list2.tail.value)){
+    if (hs.indexOf(list1.tail.value) >= 0 && hs.indexOf(list2.tail.value)) {
         //Join tail 1 to tail2
         return [list1.join(list2.reverseHeadTail())];
     }
@@ -301,28 +315,30 @@ class LinkedList {
         }
     }
 
-    reverseHeadTail(){
+    reverseHeadTail() {
         let allNodes = [];
         let n = this.head;
         allNodes.push(n);
-        while(n = n.next){
+        while (n = n.next) {
             allNodes.push(n);
         }
         //Reverse now.
         let nodeSize = allNodes.length;
-        this.head = allNodes[nodeSize-1];
+        this.head = allNodes[nodeSize - 1];
         n = this.head;
-        for (let i = nodeSize-2; i >= 0 ; --i) {
+        for (let i = nodeSize - 2; i >= 0; --i) {
             n.next = allNodes[i];
             n = n.next;
         }
         n.next = null;
         this.tail = n;
     }
-    join(list2){
+
+    join(list2) {
         this.tail.next = list2.head;
         this.tail = list2.tail;
     }
+
     traverse() {
         let n = this.head;
         let result = [n.value];

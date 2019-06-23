@@ -9,6 +9,7 @@ function plotContour(theGroup, data, width, height, onPlotContourComplete, fishe
     var path = d3.geoPath().projection(scale(scaleX, scaleY, fisheyeX, fisheyeY));
     theGroup.selectAll("path").data(contours).join("path").attr("d", path)
         .attr("fill", d => colorScale(d.value));
+
     //Draw the y axis
     drawYAxis(theGroup, data.y, width, height, fisheyeY);
     //Draw one line at the end.

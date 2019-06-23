@@ -5,4 +5,4 @@ onmessage = function(e){
         order: maximumPath(e.data.machines, e.data.links)
     };
     postMessage(results);
-}
+};

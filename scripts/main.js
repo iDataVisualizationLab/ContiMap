@@ -1,8 +1,12 @@
+let n = 100;
+/**Read the notes for the architecture of this main**/
+
 const colorSchemes = {
     "CPU1 Temp": d3.interpolateReds,
     "Fan1 speed": d3.interpolateBlues,
     "Power consumption": d3.interpolateGreens,
     "cpu_util_percent": d3.interpolateReds
+    // "cpu_util_percent": d3.interpolateRdBu
 };
 //Info div
 let settingDiv = document.getElementById('settingDiv');
@@ -18,14 +22,14 @@ let startTime = new Date(),
  * data should be in the format of {machine_id: , time_stamp: , variable1: , variable2: ...}
  * Should go to constant.js to change these field names correspondingly.
  */
-// d3.json('data/albbcpu1200s.json').then(data => {
+d3.json('data/albbcpu1200s.json').then(data => {
 // d3.json('data/albbcpu2400s.json').then(data => {
 // //Remove _id field
 // data.forEach(d => delete d['_id']);
 // d3.json('data/HPCC_04Oct2018.json').then(data => {
 // d3.json('data/HPCC_21Mar2019.json').then(data => {
 // d3.json('data/HPCC_21Mar2019210.json').then(data => {
-d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
+// d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
     const nestedByMachines = d3.nest().key(d => d[FIELD_MACHINE_ID]).entries(data);
     //Calculate the max cpu usage
     nestedByMachines.forEach(mc => {
@@ -41,19 +45,22 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
     data.sort((a, b) => a[FIELD_TIME_STAMP] - b[FIELD_TIME_STAMP]);
     const timeSteps = Array.from(new Set(data.map(d => d[FIELD_TIME_STAMP])));
     const machines = Array.from(new Set(data.map(d => d[FIELD_MACHINE_ID])));
+    let orders = [];
+
     //Get the size and set the sizes
 
-    width = Math.max(Math.round(window.innerWidth * 2 / 3), timeSteps.length);
+    width = Math.max(Math.round(window.innerWidth * 1 / 3), timeSteps.length);
     // height = Math.max(window.innerHeight, machines.length);
-    height = machines.length;
+    height = Math.min(window.innerHeight, machines.length) - timeLineHeight;
+    // height = machines.length;
     pixelsPerColumn = Math.ceil(width / timeSteps.length);
     //TODO: Note: This is used for sampling of the ticks => may need to check this. When we change the number of rows to be smaller than number of machines (less than a pixel per row)
-    pixelsPerRow = Math.ceil(height / machines.length);
+    // pixelsPerRow = Math.ceil(height / machines.length);
 
 
     //We need to make sure that the width is divisible by the timeSteps, and height is divisible by machines
     width = pixelsPerColumn * timeSteps.length;
-    height = pixelsPerRow * machines.length;
+    // height = pixelsPerRow * machines.length;
 
     fisheyeX = fisheye.scale(d3.scaleIdentity).domain([0, width]).focus(width / 2);
     fisheyeY = fisheye.scale(d3.scaleIdentity).domain([0, height]).focus(height / 2);
@@ -61,7 +68,7 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
     svgWidth = width + margins.left + margins.right;
     svgHeight = VARIABLES.length * height + margins.top + margins.bottom;
     //Now we can draw the timeLine.
-    timeLineHeight = 30;
+
     let timeLineWidth = svgWidth;
     //Add the SVG for the timeline
     let timeLineSvg = d3.select('#timeLineDiv').append("svg").attr('width', timeLineWidth).attr('height', timeLineHeight);
@@ -116,8 +123,8 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
     for (let i = 0; i < machines.length; i++) {
         //TODO: For alibaba => should check this to reduce sampling time
         // if (machineTimeObject[machines[i]].length < timeSteps.length) {
-            resampleParts[resampleCounter % maxWorkers].push(machineTimeObject[machines[i]]);
-            resampleCounter++;
+        resampleParts[resampleCounter % maxWorkers].push(machineTimeObject[machines[i]]);
+        resampleCounter++;
         // }
     }
 
@@ -155,17 +162,68 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
             similarityParts.push([]);
         }
         let similarityCounter = 0;
-        for (let i = 0; i < machines.length - 1; i++) {
-            for (let j = i + 1; j < machines.length; j++) {
-                let keyI = machines[i];
-                let keyJ = machines[j];
-                let valuesI = machineTimeObject[keyI];
+
+        /**This is one to all others**/
+        //orders = VARIABLES.map(()=> machines);//For this case the order is just the machines
+        //<editor-fold desc="This is one to all others">
+        // for (let i = 0; i < machines.length - 1; i++) {
+        //     for (let j = i + 1; j < machines.length; j++) {
+        //         let keyI = machines[i];
+        //         let keyJ = machines[j];
+        //         let valuesI = machineTimeObject[keyI];
+        //         let valuesJ = machineTimeObject[keyJ];
+        //         let sd = {x1: valuesI, x2: valuesJ};
+        //         similarityParts[similarityCounter % maxWorkers].push(sd);
+        //         similarityCounter++;
+        //     }
+        // }
+        //</editor-fold>
+        /**End of one to all others section*/
+
+        /**This is one to n others**/
+        //<editor-fold desc="This is one to n others">
+
+        //Add average value to the machineTimeObj
+        orders = VARIABLES.map(v => {
+            //Avg variable name
+            let avgV = 'avg' + v;
+            //Add average value
+            d3.keys(machineTimeObject).forEach(mc => {
+                machineTimeObject[mc][avgV] = d3.mean(machineTimeObject[mc].map(d => d[v]));
+            });
+            //Copy
+            let vOrder = machines.slice();
+            //Sort
+            vOrder.sort((a, b) => machineTimeObject[a][avgV] - machineTimeObject[b][avgV]);
+            return vOrder;
+        });
+        //Get the links to be calculated
+        let linksToBeCalculated = {};
+        VARIABLES.forEach((v, i) => {
+            //For all prev => add its next n.
+            let mcLength = orders[i].length;
+            for (let j = 0; j < mcLength; j++) {
+                let keyJ = orders[i][j];
                 let valuesJ = machineTimeObject[keyJ];
-                let sd = {x1: valuesI, x2: valuesJ};
-                similarityParts[similarityCounter % maxWorkers].push(sd);
-                similarityCounter++;
+                for (let k = 1; k <= n; k++) {
+                    if (j + k < mcLength) {
+                        let keyK = orders[i][j + k];
+                        let key = (keyJ < keyK) ? keyJ + "," + keyK : keyK + "," + keyJ;
+                        //If not exists yet in the links to be calculated then add
+                        if (!linksToBeCalculated[key]) {
+                            linksToBeCalculated[key] = {};//This is just a dummy object to check if exists or not condition => we don't need to store value for this.
+                            let valuesK = machineTimeObject[keyK];
+                            let sd = {x1: valuesJ, x2: valuesK};
+                            similarityParts[similarityCounter % maxWorkers].push(sd);
+                            similarityCounter++;
+                        }
+                    }
+                }
             }
-        }
+        });
+        //</editor-fold>
+        /**End of n others section**/
+
         let similarityResultCounter = 0;
         //Now start a worker for each of the part
         similarityParts.forEach((part, i) => {
@@ -203,7 +261,7 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
             //Build the best order.
             startWorker('scripts/workers/similarityorder_worker.js', {
                 theVar: VARIABLES[i],
-                machines: machines,
+                machines: orders[i],
                 links: part
             }, onOrderResult, i);
         });
@@ -239,7 +297,7 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
                 z.push(machineTimeObject[machine].map(st => st[theVar]));
             });
             let flatZ = z.flat();
-            let min = d3.min(flatZ) - 1;
+            let min = d3.min(flatZ);
             // let min = d3.mean(flatZ);
             let max = d3.max(flatZ);
             let numOfRanges = 5;
@@ -252,7 +310,9 @@ d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
 
             let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
             allColorScales[theVar] = colorScale;
-            let contours = d3.contours().thresholds(thresholds).size([z[0].length, z.length]).smooth(smooth)(z.flat());
+            //Keep null so that it is considered as 0 in calculation => so it will bring the absent points together, but convert back to undefined so will not plot it (if not undefined it will plot as 0).
+            let x = z.flat().map(d=>(d===null)?undefined:d);
+            let contours = d3.contours().thresholds(thresholds).size([z[0].length, z.length]).smooth(smooth)(x);
             //This section store the contours for area calculation later-on.
             contours.forEach((ct, i) => {
                     let dt = {

@@ -2,9 +2,9 @@
 const FIELD_MACHINE_ID = 'machine_id';
 const FIELD_TIME_STAMP = 'time_stamp';
 /**HPCC**/
-const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 /**Alibaba**/
-// const VARIABLES = ["cpu_util_percent"];
+const VARIABLES = ["cpu_util_percent"];
 
 /**Configuration**/
 const oneWay = true;
@@ -14,7 +14,7 @@ const stepPenalty = false;
 let margins = {left: 110, top: 0, right: 10, bottom: 0};
 let width;
 let height;
-let timeLineHeight;
+let timeLineHeight = 30;
 let svgWidth;
 let svgHeight;
 let pixelsPerColumn;
