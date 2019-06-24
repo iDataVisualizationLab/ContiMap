@@ -35,9 +35,27 @@ function oneWayOrdering1(machines, links) {
         if (!expand) {
             jumpCounter++;
             //Next node
-            let nextNode = machines[(machines.indexOf(prev)+1)%machinesLength];
-            sequence.push(nextNode);
-            prev = nextNode;
+            let counter = 1;
+            let indexOfPrev = machines.indexOf(prev);
+            while (true) {
+                let nextNode = machines[(indexOfPrev + counter) % machinesLength];
+                if (sequence.indexOf(nextNode) < 0) {
+                    sequence.push(nextNode);
+                    prev = nextNode;
+                    break;
+                }
+                if (indexOfPrev - counter >= 0) {
+                    nextNode = machines[(indexOfPrev - counter) % machinesLength];
+                    if (sequence.indexOf(nextNode) < 0) {
+                        sequence.push(nextNode);
+                        prev = nextNode;
+                        break;
+                    }
+                }
+
+                counter++;
+            }
+
         } else {
             if (expand.source === prev) {
                 sequence.push(expand.target);

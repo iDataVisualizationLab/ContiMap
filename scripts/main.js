@@ -1,11 +1,14 @@
-let n = 100;
+let n = 50;
+let marginBottom = 50;
 /**Read the notes for the architecture of this main**/
 
 const colorSchemes = {
     "CPU1 Temp": d3.interpolateReds,
     "Fan1 speed": d3.interpolateBlues,
     "Power consumption": d3.interpolateGreens,
-    "cpu_util_percent": d3.interpolateReds
+    "cpu_util_percent": d3.interpolateReds,
+    "mem_util_percent": d3.interpolateBlues,
+    "disk_io_percent": d3.interpolateGreens,
     // "cpu_util_percent": d3.interpolateRdBu
 };
 //Info div
@@ -22,8 +25,9 @@ let startTime = new Date(),
  * data should be in the format of {machine_id: , time_stamp: , variable1: , variable2: ...}
  * Should go to constant.js to change these field names correspondingly.
  */
-d3.json('data/albbcpu1200s.json').then(data => {
+// d3.json('data/albbcpu1200s.json').then(data => {
 // d3.json('data/albbcpu2400s.json').then(data => {
+d3.json('data/albb3600s.json').then(data => {
 // //Remove _id field
 // data.forEach(d => delete d['_id']);
 // d3.json('data/HPCC_04Oct2018.json').then(data => {
@@ -51,7 +55,7 @@ d3.json('data/albbcpu1200s.json').then(data => {
 
     width = Math.max(Math.round(window.innerWidth * 1 / 3), timeSteps.length);
     // height = Math.max(window.innerHeight, machines.length);
-    height = Math.min(window.innerHeight, machines.length) - timeLineHeight;
+    height = (Math.min(window.innerHeight, machines.length) - timeLineHeight - marginBottom)/3; //-10 is for bottom margin.
     // height = machines.length;
     pixelsPerColumn = Math.ceil(width / timeSteps.length);
     //TODO: Note: This is used for sampling of the ticks => may need to check this. When we change the number of rows to be smaller than number of machines (less than a pixel per row)
@@ -163,9 +167,9 @@ d3.json('data/albbcpu1200s.json').then(data => {
         }
         let similarityCounter = 0;
 
-        /**This is one to all others**/
-        //orders = VARIABLES.map(()=> machines);//For this case the order is just the machines
-        //<editor-fold desc="This is one to all others">
+        // /**This is one to all others**/
+        // orders = VARIABLES.map(()=> machines);//For this case the order is just the machines
+        // // //<editor-fold desc="This is one to all others">
         // for (let i = 0; i < machines.length - 1; i++) {
         //     for (let j = i + 1; j < machines.length; j++) {
         //         let keyI = machines[i];
@@ -177,8 +181,8 @@ d3.json('data/albbcpu1200s.json').then(data => {
         //         similarityCounter++;
         //     }
         // }
-        //</editor-fold>
-        /**End of one to all others section*/
+        // // //</editor-fold>
+        // /**End of one to all others section*/
 
         /**This is one to n others**/
         //<editor-fold desc="This is one to n others">
