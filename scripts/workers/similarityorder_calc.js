@@ -4,6 +4,10 @@
  */
 function maximumPath(machines, links) {
     // Order the weights by ascending order.
+    if(HEAT_MAP){
+        d3.shuffle(machines);
+        return machines;
+    }
     return oneWayOrdering1(machines, links);
     // return oneWayOrdering2(machines, links);
     // return oneWayOrdering3(machines, links);

@@ -1,4 +1,3 @@
-let n = 50;
 let marginBottom = 50;
 /**Read the notes for the architecture of this main**/
 
@@ -6,10 +5,13 @@ const colorSchemes = {
     "CPU1 Temp": d3.interpolateReds,
     "Fan1 speed": d3.interpolateBlues,
     "Power consumption": d3.interpolateGreens,
-    "cpu_util_percent": d3.interpolateReds,
+    // "cpu_util_percent": d3.interpolateReds,
+    "cpu_util_percent": d3.interpolateSpectral,
     "mem_util_percent": d3.interpolateBlues,
     "disk_io_percent": d3.interpolateGreens,
-    // "cpu_util_percent": d3.interpolateRdBu
+    "-1": d3.interpolateReds,
+    "-2": d3.interpolateBlues,
+    "1": d3.interpolateGreens
 };
 //Info div
 let settingDiv = document.getElementById('settingDiv');
@@ -25,25 +27,19 @@ let startTime = new Date(),
  * data should be in the format of {machine_id: , time_stamp: , variable1: , variable2: ...}
  * Should go to constant.js to change these field names correspondingly.
  */
-// d3.json('data/albbcpu1200s.json').then(data => {
-// d3.json('data/albbcpu2400s.json').then(data => {
-d3.json('data/albb3600s.json').then(data => {
-// //Remove _id field
-// data.forEach(d => delete d['_id']);
-// d3.json('data/HPCC_04Oct2018.json').then(data => {
-// d3.json('data/HPCC_21Mar2019.json').then(data => {
-// d3.json('data/HPCC_21Mar2019210.json').then(data => {
-// d3.json('data/HPCC_21Mar2019_5min.json').then(data => {
-    const nestedByMachines = d3.nest().key(d => d[FIELD_MACHINE_ID]).entries(data);
-    //Calculate the max cpu usage
-    nestedByMachines.forEach(mc => {
-        mc.values.max_cpu_util_percent = d3.max(mc.values.map(d => d[VARIABLES[0]]));
-    });
 
+d3.json('data/' + FILE_NAME).then(data => {
+    const nestedByMachines = d3.nest().key(d => d[FIELD_MACHINE_ID]).entries(data);
+    //<editor-fold desc="For alibaba only">
     // //TODO: Only filter in case of alibaba
-    // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 50).map(m => m.key);
+    // //Calculate the max cpu usage
+    // nestedByMachines.forEach(mc => {
+    //     mc.values.max_cpu_util_percent = d3.max(mc.values.map(d => d[VARIABLES[0]]));
+    // });
+    // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 80).map(m => m.key);
     // //Filter the data
     // data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
+    // //</editor-fold>
 
     //Sort the data by time_stamp
     data.sort((a, b) => a[FIELD_TIME_STAMP] - b[FIELD_TIME_STAMP]);
@@ -54,8 +50,9 @@ d3.json('data/albb3600s.json').then(data => {
     //Get the size and set the sizes
 
     width = Math.max(Math.round(window.innerWidth * 1 / 3), timeSteps.length);
-    // height = Math.max(window.innerHeight, machines.length);
-    height = (Math.min(window.innerHeight, machines.length) - timeLineHeight - marginBottom)/3; //-10 is for bottom margin.
+    // height = (Math.min(window.innerHeight, machines.length) - timeLineHeight - marginBottom)/(VARIABLES.length); //-10 is for bottom margin.
+    height = 400;
+
     // height = machines.length;
     pixelsPerColumn = Math.ceil(width / timeSteps.length);
     //TODO: Note: This is used for sampling of the ticks => may need to check this. When we change the number of rows to be smaller than number of machines (less than a pixel per row)
@@ -65,6 +62,7 @@ d3.json('data/albb3600s.json').then(data => {
     //We need to make sure that the width is divisible by the timeSteps, and height is divisible by machines
     width = pixelsPerColumn * timeSteps.length;
     // height = pixelsPerRow * machines.length;
+
 
     fisheyeX = fisheye.scale(d3.scaleIdentity).domain([0, width]).focus(width / 2);
     fisheyeY = fisheye.scale(d3.scaleIdentity).domain([0, height]).focus(height / 2);
@@ -197,8 +195,12 @@ d3.json('data/albb3600s.json').then(data => {
             });
             //Copy
             let vOrder = machines.slice();
-            //Sort
-            vOrder.sort((a, b) => machineTimeObject[a][avgV] - machineTimeObject[b][avgV]);
+            //Sort by average
+            if (!HEAT_MAP) {
+                vOrder.sort();
+            } else {
+                vOrder.sort((a, b) => machineTimeObject[a][avgV] - machineTimeObject[b][avgV]);
+            }
             return vOrder;
         });
         //Get the links to be calculated
@@ -209,7 +211,7 @@ d3.json('data/albb3600s.json').then(data => {
             for (let j = 0; j < mcLength; j++) {
                 let keyJ = orders[i][j];
                 let valuesJ = machineTimeObject[keyJ];
-                for (let k = 1; k <= n; k++) {
+                for (let k = 1; k <= NUM_OF_NEIGHBORS; k++) {
                     if (j + k < mcLength) {
                         let keyK = orders[i][j + k];
                         let key = (keyJ < keyK) ? keyJ + "," + keyK : keyK + "," + keyJ;
@@ -301,9 +303,9 @@ d3.json('data/albb3600s.json').then(data => {
                 z.push(machineTimeObject[machine].map(st => st[theVar]));
             });
             let flatZ = z.flat();
-            let min = d3.min(flatZ);
-            // let min = d3.mean(flatZ);
-            let max = d3.max(flatZ);
+            let x = flatZ.map(d => (d === NULL_VALUE) ? undefined : d);
+            let min = d3.min(x);
+            let max = d3.max(x);
             let numOfRanges = 5;
             let range = (max - min) / numOfRanges;
             let thresholds = [];
@@ -311,11 +313,13 @@ d3.json('data/albb3600s.json').then(data => {
                 thresholds.push(min + i * range);
             }
             let colors = thresholds.map(v => colorSchemes[theVar](v / max));
-
+            colors.reverse();
+            // let colors = ['#3368FF', '#33F0FF', '#33FF39', '#FFBE33', '#FF3F33'];
             let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
+
             allColorScales[theVar] = colorScale;
             //Keep null so that it is considered as 0 in calculation => so it will bring the absent points together, but convert back to undefined so will not plot it (if not undefined it will plot as 0).
-            let x = z.flat().map(d=>(d===null)?undefined:d);
+
             let contours = d3.contours().thresholds(thresholds).size([z[0].length, z.length]).smooth(smooth)(x);
             //This section store the contours for area calculation later-on.
             contours.forEach((ct, i) => {
@@ -341,7 +345,20 @@ d3.json('data/albb3600s.json').then(data => {
             };
             //Save it to use later when mouseover.
             theGroup.node().contourData = contourData;
-            plotContour(theGroup, contourData, width, height, onDrawingCompleted);
+            if (!HEAT_MAP) {
+                plotContour(theGroup, contourData, width, height, onDrawingCompleted);
+            } else {
+                let heatmapData = {
+                    timeSteps: timeSteps,
+                    machines: y,
+                    data: z,
+                    colorScale: colorScale,
+                    thresholds: thresholds
+                };
+                plotHeatmap(theGroup, heatmapData, width, height, () => {
+                });
+            }
+
 
             let doneDrawing = new Date();
             //Hide the loader

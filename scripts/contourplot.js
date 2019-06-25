@@ -1,3 +1,37 @@
+function plotHeatmap(theGroup, heatmapData, width, height, onPlotHeatmapComplete) {
+    let timeSteps = heatmapData.timeSteps,
+        machines = heatmapData.machines,
+        data = heatmapData.data,
+        colorScale = heatmapData.colorScale,
+        thresholds = heatmapData.thresholds;
+    let cellWidth = width / timeSteps.length,
+        cellHeight = height / machines.length;
+
+    //Draw the cells.
+    machines.forEach((machine, mcI) => {
+        timeSteps.forEach((timeStep, tsI) => {
+            let value = data[mcI][tsI];
+            if (value !== undefined && value !== null) {
+                debugger
+                theGroup.append('rect')
+                    .attr("x", tsI * cellWidth)
+                    .attr("y", mcI * cellHeight)
+                    .attr("width", cellWidth)
+                    .attr("height", cellHeight)
+                    .attr("stroke", 'black')
+                    .attr('stroke-width', 0.1)
+                    .attr("fill", colorScale(valueToThreshold(value)));
+            }
+        });
+    });
+
+    // drawYAxis(theGroup, machines, width, height);
+
+    function valueToThreshold(value) {
+        return thresholds[d3.bisectLeft(thresholds, value) - 1];
+    }
+}
+
 function plotContour(theGroup, data, width, height, onPlotContourComplete, fisheyeX, fisheyeY) {
     let scaleX = data.scaleX;
     let scaleY = data.scaleY;
@@ -18,6 +52,7 @@ function plotContour(theGroup, data, width, height, onPlotContourComplete, fishe
     //     .attr("stroke-width", 1).attr("stroke", 'black');
     onPlotContourComplete(data.variable);
 }
+
 function scale(scaleX, scaleY, fisheyeX, fisheyeY) {
     return d3.geoTransform({
         point: function (x, y) {
@@ -29,10 +64,11 @@ function scale(scaleX, scaleY, fisheyeX, fisheyeY) {
         }
     });
 }
+
 function drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, fisheyeX) {
     let xScale = d3.scaleLinear().domain(d3.extent(timeSteps)).range([0, timeLineWidth - margins.left - margins.right]);
     let timeStepData = [];
-    let minDistance = 20;
+    let minDistance = 60;
     let prevX = 0;
     let x;
     //Todo: We may need to spread from the center to two other ways=> since using this may not guarantee the one in the current mouse is displayed.
