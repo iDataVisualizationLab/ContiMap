@@ -5,8 +5,8 @@ const colorSchemes = {
     "CPU1 Temp": d3.interpolateReds,
     "Fan1 speed": d3.interpolateBlues,
     "Power consumption": d3.interpolateGreens,
-    // "cpu_util_percent": d3.interpolateReds,
-    "cpu_util_percent": d3.interpolateSpectral,
+    "cpu_util_percent": d3.interpolateReds,
+    // "cpu_util_percent": d3.interpolateSpectral,
     "mem_util_percent": d3.interpolateBlues,
     "disk_io_percent": d3.interpolateGreens,
     "-1": d3.interpolateReds,
@@ -16,7 +16,7 @@ const colorSchemes = {
 //Info div
 let settingDiv = document.getElementById('settingDiv');
 let calculationTbl = document.getElementById('calculationTbl');
-let settingTblStr = createTableStr([[{innerHTML: 'oneWay'}, {innerHTML: oneWay}], [{innerHTML: 'penalty'}, {innerHTML: stepPenalty}]]);
+let settingTblStr = createTableStr([[{innerHTML: 'Number of neighbors'}, {innerHTML: NUM_OF_NEIGHBORS}]]);
 addInfoHTML(settingDiv, settingTblStr);
 
 //Time records
@@ -313,7 +313,7 @@ d3.json('data/' + FILE_NAME).then(data => {
                 thresholds.push(min + i * range);
             }
             let colors = thresholds.map(v => colorSchemes[theVar](v / max));
-            colors.reverse();
+            // colors.reverse();
             // let colors = ['#3368FF', '#33F0FF', '#33FF39', '#FFBE33', '#FF3F33'];
             let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
 

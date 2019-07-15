@@ -1,14 +1,15 @@
 const HEAT_MAP = false;
+
 const NULL_VALUE = null;
 //Contains some constants for the whole program
-const NUM_OF_NEIGHBORS = 476;
+const NUM_OF_NEIGHBORS = 400;
 const FIELD_MACHINE_ID = 'machine_id';
 const FIELD_TIME_STAMP = 'time_stamp';
 
 /**HPCC**/
 const FILE_NAME = 'HPCC_21Mar2019_5min.json';
-// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
-const VARIABLES = ["CPU1 Temp"];
+const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+// const VARIABLES = ["CPU1 Temp"];
 
 /**Alibaba**/
 // const FILE_NAME = 'albb3600s.json';

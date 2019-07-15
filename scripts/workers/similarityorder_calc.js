@@ -8,6 +8,9 @@ function maximumPath(machines, links) {
         d3.shuffle(machines);
         return machines;
     }
+    if(NUM_OF_NEIGHBORS === 1){
+        return machines;
+    }
     return oneWayOrdering1(machines, links);
     // return oneWayOrdering2(machines, links);
     // return oneWayOrdering3(machines, links);
