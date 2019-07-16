@@ -7,8 +7,13 @@ const FIELD_MACHINE_ID = 'machine_id';
 const FIELD_TIME_STAMP = 'time_stamp';
 
 /**HPCC**/
-const FILE_NAME = 'HPCC_21Mar2019_5min.json';
-const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+// const FILE_NAME = 'HPCC_21Mar2019_5min.json';
+// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+// // const VARIABLES = ["CPU1 Temp"];
+
+/**HPCC 2**/
+const FILE_NAME = 'HPCC_2019031824.json';
+const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Memory usage"];
 // const VARIABLES = ["CPU1 Temp"];
 
 /**Alibaba**/
@@ -19,7 +24,6 @@ const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 /**Honeynet**/
 // const FILE_NAME = 'honeynet2015.json';
 // const VARIABLES = ["-1", "-2"];
-
 
 /**Configuration**/
 const oneWay = true;

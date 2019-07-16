@@ -1,10 +1,12 @@
 let marginBottom = 50;
 /**Read the notes for the architecture of this main**/
 
+
 const colorSchemes = {
     "CPU1 Temp": d3.interpolateReds,
     "Fan1 speed": d3.interpolateBlues,
     "Power consumption": d3.interpolateGreens,
+    "Memory usage": d3.interpolateGreens,
     "cpu_util_percent": d3.interpolateReds,
     // "cpu_util_percent": d3.interpolateSpectral,
     "mem_util_percent": d3.interpolateBlues,
