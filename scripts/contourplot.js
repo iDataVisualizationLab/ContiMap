@@ -83,7 +83,13 @@ function drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, fisheyeX) {
     let tickSelection = timeLineG.selectAll('.tickG').data(timeStepData, d => d.tick);
     let enterGroups = tickSelection.enter().append('g').attr('class', 'tickG');
     enterGroups.append('line').attr('stroke', 'black').attr("stroke-width", 1).attr('y2', -9);
-    enterGroups.append('text').text(d => d.tick).attr("text-anchor", 'middle').attr('y', '-1em');
+    enterGroups.append('text').text(d => {
+        if(typeof (START_DATE) === 'undefined' || typeof (FORMAT_STR)==='undefined' || typeof (STEP) === 'undefined'){
+            return d.tick;
+        }else{
+            return timeStampToDate(d.tick);
+        }
+    }).attr("text-anchor", 'middle').attr('y', '-1em');
     tickSelection.exit().remove();
     //Merge then Update
     tickSelection.merge(enterGroups).attr("transform", d => `translate(${d.x}, 0)`);

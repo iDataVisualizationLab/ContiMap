@@ -17,17 +17,21 @@ const FIELD_TIME_STAMP = 'time_stamp';
 // // const VARIABLES = ["CPU1 Temp"];
 
 /**HPCC 3**/
-// const FILE_NAME = 'HPCC_20190625_2min_1day.json';
-// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
-// // const VARIABLES = ["CPU1 Temp"];
+const FILE_NAME = 'HPCC_20190625_2min_1day.json';
+const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+const FORMAT_STR = '%H:%M',
+    START_DATE = new Date('2019/06/25'),
+    STEP = 1000 * 60 * 2;
 /**HPCC 4**/
 // const FILE_NAME = 'HPCC_week_18_24_March2019_full_3Vars.json';
 // const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 // // const VARIABLES = ["CPU1 Temp"];
 // /**HPCC 4**/
-const FILE_NAME = 'HPCC_21_March2019_3Vars.json';
-const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
-// const VARIABLES = ["CPU1 Temp"];
+// const FILE_NAME = 'HPCC_21_March2019_3Vars.json';
+// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+// const FORMAT_STR = '%H:%M',
+//     START_DATE = new Date('2019/03/21'),
+//     STEP = 1000 * 60 * 2;
 
 /**Alibaba**/
 // const FILE_NAME = 'albb3600s.json';
