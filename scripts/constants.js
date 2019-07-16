@@ -12,8 +12,13 @@ const FIELD_TIME_STAMP = 'time_stamp';
 // // const VARIABLES = ["CPU1 Temp"];
 
 /**HPCC 2**/
-const FILE_NAME = 'HPCC_2019031824.json';
-const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Memory usage"];
+// const FILE_NAME = 'HPCC_2019031824.json';
+// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Memory usage"];
+// // const VARIABLES = ["CPU1 Temp"];
+
+/**HPCC 2**/
+const FILE_NAME = 'HPCC_20190625_2min_1day.json';
+const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 // const VARIABLES = ["CPU1 Temp"];
 
 /**Alibaba**/
