@@ -16,8 +16,16 @@ const FIELD_TIME_STAMP = 'time_stamp';
 // const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Memory usage"];
 // // const VARIABLES = ["CPU1 Temp"];
 
-/**HPCC 2**/
-const FILE_NAME = 'HPCC_20190625_2min_1day.json';
+/**HPCC 3**/
+// const FILE_NAME = 'HPCC_20190625_2min_1day.json';
+// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+// // const VARIABLES = ["CPU1 Temp"];
+/**HPCC 4**/
+// const FILE_NAME = 'HPCC_week_18_24_March2019_full_3Vars.json';
+// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+// // const VARIABLES = ["CPU1 Temp"];
+// /**HPCC 4**/
+const FILE_NAME = 'HPCC_21_March2019_3Vars.json';
 const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 // const VARIABLES = ["CPU1 Temp"];
 

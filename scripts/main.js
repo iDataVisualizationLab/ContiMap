@@ -406,6 +406,14 @@ d3.json('data/' + FILE_NAME).then(data => {
     }
 
     function setupMouseMove() {
+        function setFocus(groupIndex, fisheyeX, fisheyeY) {
+            let contourPlot = d3.select(`#contourPlot${groupIndex}`);
+            plotContour(contourPlot, contourPlot.node().contourData, width, height, () => {
+            }, fisheyeX, fisheyeY);
+            //Redraw timeline
+            drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, fisheyeX);
+        }
+
         //Setup mouseover on the svg.
         mainSvg.on("mousemove", function () {
             let mouse = d3.mouse(this);
@@ -422,11 +430,13 @@ d3.json('data/' + FILE_NAME).then(data => {
             fisheyeX.focus(mouseX);
             fisheyeY.focus(mouseY);
             //First element
-            let contourPlot = d3.select(`#contourPlot${groupIndex}`);
-            plotContour(contourPlot, contourPlot.node().contourData, width, height, () => {
-            }, fisheyeX, fisheyeY);
-            //Redraw timeline
-            drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, fisheyeX);
+            setFocus(groupIndex, fisheyeX, fisheyeY);
+        });
+        mainSvg.on("mouseout", function () {
+            //Rest the contour (without having fish eye.
+            VARIABLES.forEach((v, i) => {
+                setFocus(i, undefined, undefined);
+            });
         });
     }
 });
