@@ -1,4 +1,5 @@
 function plotHeatmap(theGroup, heatmapData, width, height, onPlotHeatmapComplete) {
+
     let timeSteps = heatmapData.timeSteps,
         machines = heatmapData.machines,
         data = heatmapData.data,
@@ -33,6 +34,7 @@ function plotHeatmap(theGroup, heatmapData, width, height, onPlotHeatmapComplete
 }
 
 function plotContour(theGroup, data, width, height, onPlotContourComplete, fisheyeX, fisheyeY) {
+
     let scaleX = data.scaleX;
     let scaleY = data.scaleY;
     let colorScale = data.colorScale;

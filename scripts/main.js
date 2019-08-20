@@ -1,7 +1,6 @@
 let marginBottom = 50;
+
 /**Read the notes for the architecture of this main**/
-
-
 const colorSchemes = {
     "CPU1 Temp": d3.interpolateReds,
     "Fan1 speed": d3.interpolateBlues,
@@ -47,6 +46,12 @@ d3.json('data/' + FILE_NAME).then(data => {
     data.sort((a, b) => a[FIELD_TIME_STAMP] - b[FIELD_TIME_STAMP]);
     const timeSteps = Array.from(new Set(data.map(d => d[FIELD_TIME_STAMP])));
     const machines = Array.from(new Set(data.map(d => d[FIELD_MACHINE_ID])));
+    //Add autocomplete box to search for
+    // //This section is to set the autocomplete word
+    autocomplete(document.getElementById("theWord"), machines, (theTextField) => {
+
+    });
+
     let orders = [];
 
     //Get the size and set the sizes
@@ -56,6 +61,7 @@ d3.json('data/' + FILE_NAME).then(data => {
     height = 400;
 
     // height = machines.length;
+
     pixelsPerColumn = Math.ceil(width / timeSteps.length);
     //TODO: Note: This is used for sampling of the ticks => may need to check this. When we change the number of rows to be smaller than number of machines (less than a pixel per row)
     // pixelsPerRow = Math.ceil(height / machines.length);
@@ -83,7 +89,7 @@ d3.json('data/' + FILE_NAME).then(data => {
         .attr('stroke', 'black').attr('stroke-width', 1);
     //Add a group to display the timeline to
     timeLineSvg.append("g").attr("id", "timeLineG").attr("transform", `translate(${margins.left}, ${timeLineHeight - 1})`);//-1 is for the bottom line
-    drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, fisheyeX);
+    drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, undefined);
 
 
     //Add svg and the groups for the contour plots of the variables.
@@ -100,6 +106,11 @@ d3.json('data/' + FILE_NAME).then(data => {
     //Display number of machines
     addInfoRow(calculationTbl, [{innerHTML: 'Machines'}, {
         innerHTML: machines.length,
+        styles: [{key: 'textAlign', value: 'right'}]
+    }]);
+    //Display number of time-steps
+    addInfoRow(calculationTbl, [{innerHTML: 'Time-steps'}, {
+        innerHTML: timeSteps.length,
         styles: [{key: 'textAlign', value: 'right'}]
     }]);
     //Sort the machines so we can gurantee the naming order from source to target (source always < target)
@@ -297,6 +308,11 @@ d3.json('data/' + FILE_NAME).then(data => {
             let startDrawing = new Date();
             let theGroup = d3.select(`#contourPlot${VARIABLES.indexOf(theVar)}`);
             let order = orderResults.order;
+            // //Shuffle => to generate graphics for the paper only.
+            // function shuffle(array) {
+            //     array.sort(() => Math.random() - 0.5);
+            // }
+            // shuffle(order);
 
             //Building the data
             let y = order;
@@ -310,10 +326,31 @@ d3.json('data/' + FILE_NAME).then(data => {
             let max = d3.max(x);
             let numOfRanges = 5;
             let range = (max - min) / numOfRanges;
-            let thresholds = [];
-            for (let i = 0; i < numOfRanges; i++) {
-                thresholds.push(min + i * range);
+            //TODO: This is specific for HPCC.
+            //["CPU1 Temp", "Fan1 speed", "Power consumption"]
+            //CPU usage [3 corresponds to 0 and 98 corresponds to 1.0] => Celcius
+            //Fan speed min max [1050 corresponds to 0 and 17850 corresponds to 1.0] => rpm
+            //Power consumption  [0 corresponds to , 200] => Watts
+
+            let thesholdRange = [];
+            if (theVar === "CPU1 Temp") {
+                thesholdRange = [3, 90];
+            } else if (theVar === "Fan1 speed") {
+                thesholdRange = [1050, 14000];
+            } else if (theVar === "Power consumption") {
+                thesholdRange = [0, 110];
             }
+            let percents = [0, .25, .5, .75, 1.];
+            let thresholScale = d3.scaleLinear().domain([0, 1]).range(thesholdRange).clamp(false);
+            let thresholds = percents.map(p => thresholScale(p));
+
+
+            //TODO: Enable the following lines for other cases.
+            // let thresholds = [];
+            // for (let i = 0; i < numOfRanges; i++) {
+            //     thresholds.push(min + i * range);
+            // }
+
             let colors = thresholds.map(v => colorSchemes[theVar](v / max));
             // colors.reverse();
             // let colors = ['#3368FF', '#33F0FF', '#33FF39', '#FFBE33', '#FF3F33'];
@@ -323,6 +360,7 @@ d3.json('data/' + FILE_NAME).then(data => {
             //Keep null so that it is considered as 0 in calculation => so it will bring the absent points together, but convert back to undefined so will not plot it (if not undefined it will plot as 0).
 
             let contours = d3.contours().thresholds(thresholds).size([z[0].length, z.length]).smooth(smooth)(x);
+            debugger;
             //This section store the contours for area calculation later-on.
             contours.forEach((ct, i) => {
                     let dt = {
@@ -578,6 +616,6 @@ function numberWithCommas(x) {
  * @param format
  * @returns {*}
  */
-function timeStampToDate(timeStamp){
-    return d3.timeFormat(FORMAT_STR)(new Date(START_DATE.getTime() + STEP*timeStamp));
+function timeStampToDate(timeStamp) {
+    return d3.timeFormat(FORMAT_STR)(new Date(START_DATE.getTime() + STEP * timeStamp));
 }

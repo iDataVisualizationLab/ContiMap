@@ -25,6 +25,16 @@
 <script>
     showLoader();
 </script>
+<!--section for auto-complete: adopted from w3schools-->
+<style>
+    @import "lib/autocomplete/autocomplete.css";
+</style>
+<script src="lib/autocomplete/autocomplete.js"></script>
+<form autocomplete="off" action="none" style="position: absolute; margin-top:0px;">
+    <div class="autocomplete" style="width:100px;">
+        <input id="theWord" type="text" name="theWord" placeholder="search">
+    </div>
+</form>
 <div id="configurationContainer" class="floatingBox">
     <div id="configurationContainerHeader" class="floatingBoxHeader"><span class="floatingBoxButton"
                                                                            onclick="closeFloatingBox('btnConfiguration', 'configurationContainer')">[-]</span>

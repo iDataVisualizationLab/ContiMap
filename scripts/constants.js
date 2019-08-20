@@ -2,14 +2,14 @@ const HEAT_MAP = false;
 
 const NULL_VALUE = null;
 //Contains some constants for the whole program
-const NUM_OF_NEIGHBORS = 400;
+const NUM_OF_NEIGHBORS = 1200;
 const FIELD_MACHINE_ID = 'machine_id';
 const FIELD_TIME_STAMP = 'time_stamp';
 
 /**HPCC**/
 // const FILE_NAME = 'HPCC_21Mar2019_5min.json';
-// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
-// // const VARIABLES = ["CPU1 Temp"];
+// // const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+// const VARIABLES = ["CPU1 Temp"];
 
 /**HPCC 2**/
 // const FILE_NAME = 'HPCC_2019031824.json';
@@ -17,28 +17,37 @@ const FIELD_TIME_STAMP = 'time_stamp';
 // // const VARIABLES = ["CPU1 Temp"];
 
 /**HPCC 3**/
-const FILE_NAME = 'HPCC_20190625_2min_1day.json';
-const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
-const FORMAT_STR = '%H:%M',
-    START_DATE = new Date('2019/06/25'),
-    STEP = 1000 * 60 * 2;
+// const FILE_NAME = 'HPCC_20190625_2min_1day.json';
+// const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+// const FORMAT_STR = '%H:%M',
+//     START_DATE = new Date('2019/06/25'),
+//     STEP = 1000 * 60 * 2;
 /**HPCC 4**/
 // const FILE_NAME = 'HPCC_week_18_24_March2019_full_3Vars.json';
 // const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 // // const VARIABLES = ["CPU1 Temp"];
-// /**HPCC 4**/
+/**HPCC 4**/
 // const FILE_NAME = 'HPCC_21_March2019_3Vars.json';
 // const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 // const FORMAT_STR = '%H:%M',
 //     START_DATE = new Date('2019/03/21'),
 //     STEP = 1000 * 60 * 2;
+/**HPCC 5**/
+const FILE_NAME = 'HPCC_2018_03_21_2min_wholeday.json';
+const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+const FORMAT_STR = '%H:%M',
+    START_DATE = new Date('2019/03/21'),
+    STEP = 1000 * 60 * 2;
 
 /**Alibaba**/
 // const FILE_NAME = 'albb3600s.json';
 // const VARIABLES = ["cpu_util_percent", "mem_util_percent", "disk_io_percent"];
-// const VARIABLES = ["cpu_util_percent"];
+// // const VARIABLES = ["cpu_util_percent"];
+// const FORMAT_STR = '%H:%M',
+//     START_DATE = new Date('2018/01/01'),
+//     STEP = 1000;
 
-/**Honeynet**/
+// /**Honeynet**/
 // const FILE_NAME = 'honeynet2015.json';
 // const VARIABLES = ["-1", "-2"];
 
