@@ -57,8 +57,8 @@ d3.json('data/' + FILE_NAME).then(data => {
     //Get the size and set the sizes
 
     width = Math.max(Math.round(window.innerWidth * 1 / 3), timeSteps.length);
-    // height = (Math.min(window.innerHeight, machines.length) - timeLineHeight - marginBottom)/(VARIABLES.length); //-10 is for bottom margin.
-    height = 400;
+    height = (Math.min(window.innerHeight, machines.length*VARIABLES.length) - timeLineHeight - marginBottom)/(VARIABLES.length); //-10 is for bottom margin.
+    // height = 250;
 
     // height = machines.length;
 
@@ -345,7 +345,7 @@ d3.json('data/' + FILE_NAME).then(data => {
             let thresholds = percents.map(p => thresholScale(p));
 
 
-            //TODO: Enable the following lines for other cases.
+            // //TODO: Enable the following lines for other cases.
             // let thresholds = [];
             // for (let i = 0; i < numOfRanges; i++) {
             //     thresholds.push(min + i * range);
