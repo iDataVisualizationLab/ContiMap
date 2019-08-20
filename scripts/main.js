@@ -68,7 +68,7 @@ d3.json('data/' + FILE_NAME).then(data => {
 
 
     //We need to make sure that the width is divisible by the timeSteps, and height is divisible by machines
-    width = pixelsPerColumn * timeSteps.length;
+    // width = pixelsPerColumn * timeSteps.length;
     // height = pixelsPerRow * machines.length;
 
 
