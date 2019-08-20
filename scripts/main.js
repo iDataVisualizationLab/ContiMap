@@ -17,7 +17,7 @@ const colorSchemes = {
 //Info div
 let settingDiv = document.getElementById('settingDiv');
 let calculationTbl = document.getElementById('calculationTbl');
-let settingTblStr = createTableStr([[{innerHTML: 'Number of neighbors'}, {innerHTML: NUM_OF_NEIGHBORS}]]);
+let settingTblStr = createTableStr([[{innerHTML: 'Number of neighbors (k)'}, {innerHTML: NUM_OF_NEIGHBORS}]]);
 addInfoHTML(settingDiv, settingTblStr);
 
 //Time records
@@ -56,7 +56,7 @@ d3.json('data/' + FILE_NAME).then(data => {
 
     //Get the size and set the sizes
 
-    width = Math.max(Math.round(window.innerWidth * 1 / 3), timeSteps.length);
+    width = Math.max(Math.round(window.innerWidth * 2 / 3), timeSteps.length);
     height = (Math.min(window.innerHeight, machines.length*VARIABLES.length) - timeLineHeight - marginBottom)/(VARIABLES.length); //-10 is for bottom margin.
     // height = 250;
 
@@ -326,30 +326,30 @@ d3.json('data/' + FILE_NAME).then(data => {
             let max = d3.max(x);
             let numOfRanges = 5;
             let range = (max - min) / numOfRanges;
-            //TODO: This is specific for HPCC.
-            //["CPU1 Temp", "Fan1 speed", "Power consumption"]
-            //CPU usage [3 corresponds to 0 and 98 corresponds to 1.0] => Celcius
-            //Fan speed min max [1050 corresponds to 0 and 17850 corresponds to 1.0] => rpm
-            //Power consumption  [0 corresponds to , 200] => Watts
-
-            let thesholdRange = [];
-            if (theVar === "CPU1 Temp") {
-                thesholdRange = [3, 90];
-            } else if (theVar === "Fan1 speed") {
-                thesholdRange = [1050, 14000];
-            } else if (theVar === "Power consumption") {
-                thesholdRange = [0, 110];
-            }
-            let percents = [0, .25, .5, .75, 1.];
-            let thresholScale = d3.scaleLinear().domain([0, 1]).range(thesholdRange).clamp(false);
-            let thresholds = percents.map(p => thresholScale(p));
-
-
-            // //TODO: Enable the following lines for other cases.
-            // let thresholds = [];
-            // for (let i = 0; i < numOfRanges; i++) {
-            //     thresholds.push(min + i * range);
+            // //TODO: This is specific for HPCC.
+            // //["CPU1 Temp", "Fan1 speed", "Power consumption"]
+            // //CPU usage [3 corresponds to 0 and 98 corresponds to 1.0] => Celcius
+            // //Fan speed min max [1050 corresponds to 0 and 17850 corresponds to 1.0] => rpm
+            // //Power consumption  [0 corresponds to , 200] => Watts
+            //
+            // let thesholdRange = [];
+            // if (theVar === "CPU1 Temp") {
+            //     thesholdRange = [3, 90];
+            // } else if (theVar === "Fan1 speed") {
+            //     thesholdRange = [1050, 14000];
+            // } else if (theVar === "Power consumption") {
+            //     thesholdRange = [0, 110];
             // }
+            // let percents = [0, .25, .5, .75, 1.];
+            // let thresholScale = d3.scaleLinear().domain([0, 1]).range(thesholdRange).clamp(false);
+            // let thresholds = percents.map(p => thresholScale(p));
+
+
+            //TODO: Enable the following lines for other cases.
+            let thresholds = [];
+            for (let i = 0; i < numOfRanges; i++) {
+                thresholds.push(min + i * range);
+            }
 
             let colors = thresholds.map(v => colorSchemes[theVar](v / max));
             // colors.reverse();
