@@ -2,7 +2,7 @@ const HEAT_MAP = false;
 
 const NULL_VALUE = null;
 //Contains some constants for the whole program
-const NUM_OF_NEIGHBORS = 1200;
+const NUM_OF_NEIGHBORS = 466;
 const FIELD_MACHINE_ID = 'machine_id';
 const FIELD_TIME_STAMP = 'time_stamp';
 
@@ -35,14 +35,15 @@ const FIELD_TIME_STAMP = 'time_stamp';
 /**HPCC 5**/
 const FILE_NAME = 'HPCC_2018_03_21_2min_wholeday.json';
 const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
+// const VARIABLES = ["CPU1 Temp"];
 const FORMAT_STR = '%H:%M',
     START_DATE = new Date('2019/03/21'),
     STEP = 1000 * 60 * 2;
 
 /**Alibaba**/
 // const FILE_NAME = 'albb3600s.json';
-// const VARIABLES = ["cpu_util_percent", "mem_util_percent", "disk_io_percent"];
-// // const VARIABLES = ["cpu_util_percent"];
+// // const VARIABLES = ["cpu_util_percent", "mem_util_percent", "disk_io_percent"];
+// const VARIABLES = ["cpu_util_percent"];
 // const FORMAT_STR = '%H:%M',
 //     START_DATE = new Date('2018/01/01'),
 //     STEP = 1000;

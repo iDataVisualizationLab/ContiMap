@@ -3,11 +3,12 @@ let marginBottom = 50;
 /**Read the notes for the architecture of this main**/
 const colorSchemes = {
     "CPU1 Temp": d3.interpolateReds,
+    // "CPU1 Temp": d3.interpolateSpectral,
     "Fan1 speed": d3.interpolateBlues,
     "Power consumption": d3.interpolateGreens,
     "Memory usage": d3.interpolateGreens,
-    "cpu_util_percent": d3.interpolateReds,
-    // "cpu_util_percent": d3.interpolateSpectral,
+    // "cpu_util_percent": d3.interpolateReds,
+    "cpu_util_percent": d3.interpolateSpectral,
     "mem_util_percent": d3.interpolateBlues,
     "disk_io_percent": d3.interpolateGreens,
     "-1": d3.interpolateReds,
@@ -56,10 +57,9 @@ d3.json('data/' + FILE_NAME).then(data => {
 
     //Get the size and set the sizes
 
-    width = Math.max(Math.round(window.innerWidth * 2 / 3), timeSteps.length);
-    height = (Math.min(window.innerHeight, machines.length*VARIABLES.length) - timeLineHeight - marginBottom)/(VARIABLES.length); //-10 is for bottom margin.
-    // height = 250;
-
+    width = Math.max(Math.round(window.innerWidth * 1 / 3), timeSteps.length);
+    height = (Math.min(window.innerHeight, machines.length * VARIABLES.length) - timeLineHeight - marginBottom) / (VARIABLES.length); //-10 is for bottom margin.
+    // height = 800;
     // height = machines.length;
 
     pixelsPerColumn = Math.ceil(width / timeSteps.length);
@@ -334,13 +334,13 @@ d3.json('data/' + FILE_NAME).then(data => {
             //
             // let thesholdRange = [];
             // if (theVar === "CPU1 Temp") {
-            //     thesholdRange = [3, 90];
+            //     thesholdRange = [0, 85];
             // } else if (theVar === "Fan1 speed") {
             //     thesholdRange = [1050, 14000];
             // } else if (theVar === "Power consumption") {
             //     thesholdRange = [0, 110];
             // }
-            // let percents = [0, .25, .5, .75, 1.];
+            // let percents = [0, .25, .5, .75, 1.0];
             // let thresholScale = d3.scaleLinear().domain([0, 1]).range(thesholdRange).clamp(false);
             // let thresholds = percents.map(p => thresholScale(p));
 
