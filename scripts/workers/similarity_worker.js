@@ -1,4 +1,4 @@
-importScripts('../constants.js', 'similarity_calc.js');
+importScripts('./constants.js', 'similarity_calc.js');
 onmessage = function (e) {
     let results = [];
     let part = e.data;

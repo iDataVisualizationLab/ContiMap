@@ -13,7 +13,21 @@ const colorSchemes = {
     "disk_io_percent": d3.interpolateGreens,
     "-1": d3.interpolateReds,
     "-2": d3.interpolateBlues,
-    "1": d3.interpolateGreens
+    "1": d3.interpolateGreens,
+
+    /*Color scheme for solar flare*/
+    'TOTUSJH': d3.interpolateSpectral,
+    'TOTUSJZ': d3.interpolateSpectral,
+    'USFLUX': d3.interpolateSpectral,
+    'R_VALUE': d3.interpolateSpectral,
+    'TOTBSQ': d3.interpolateSpectral,
+    'MEANJZH': d3.interpolateSpectral,
+    'MEANALP': d3.interpolateSpectral,
+    'SAVNCPP': d3.interpolateSpectral,
+    'EPSX': d3.interpolateSpectral,
+    'EPSY': d3.interpolateSpectral,
+    'TOTPOT': d3.interpolateSpectral,
+    'EPSZ': d3.interpolateSpectral
 };
 //Info div
 let settingDiv = document.getElementById('settingDiv');
@@ -31,22 +45,26 @@ let startTime = new Date(),
  */
 
 d3.json('data/' + FILE_NAME).then(data => {
+
     const nestedByMachines = d3.nest().key(d => d[FIELD_MACHINE_ID]).entries(data);
     //<editor-fold desc="For alibaba only">
-    // //TODO: Only filter in case of alibaba
-    // //Calculate the max cpu usage
-    // nestedByMachines.forEach(mc => {
-    //     mc.values.max_cpu_util_percent = d3.max(mc.values.map(d => d[VARIABLES[0]]));
-    // });
-    // let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 80).map(m => m.key);
-    // //Filter the data
-    // data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
-    // //</editor-fold>
+    //TODO: Only filter in case of alibaba
+    if (FILE_TYPE === "alibaba") {
+        //Calculate the max cpu usage
+        nestedByMachines.forEach(mc => {
+            mc.values.max_cpu_util_percent = d3.max(mc.values.map(d => d[VARIABLES[0]]));
+        });
+        let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 60).map(m => m.key);
+        //Filter the data
+        data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
+    }
+
+    //</editor-fold>
 
     //Sort the data by time_stamp
     data.sort((a, b) => a[FIELD_TIME_STAMP] - b[FIELD_TIME_STAMP]);
     const timeSteps = Array.from(new Set(data.map(d => d[FIELD_TIME_STAMP])));
-    const machines = Array.from(new Set(data.map(d => d[FIELD_MACHINE_ID])));
+    const machines = Array.from(new Set(data.map(d => ""+d[FIELD_MACHINE_ID])));//Convert to string to use the autocomplete search box.
     //Add autocomplete box to search for
     // //This section is to set the autocomplete word
     autocomplete(document.getElementById("theWord"), machines, (theTextField) => {
@@ -57,10 +75,17 @@ d3.json('data/' + FILE_NAME).then(data => {
 
     //Get the size and set the sizes
 
-    width = Math.max(Math.round(window.innerWidth * 1 / 3), timeSteps.length);
+    // width = Math.max(Math.round(window.innerWidth * 1 / 3), timeSteps.length);
+    width = document.getElementById("main-part").getBoundingClientRect().width;
+    // width = 300;
+
     height = (Math.min(window.innerHeight, machines.length * VARIABLES.length) - timeLineHeight - marginBottom) / (VARIABLES.length); //-10 is for bottom margin.
-    // height = 800;
-    // height = machines.length;
+    if (FILE_TYPE === "alibaba") {
+        height = machines.length * 2;
+    } else if (FILE_TYPE === "solarflares") {
+        height = machines.length;
+    }
+
 
     pixelsPerColumn = Math.ceil(width / timeSteps.length);
     //TODO: Note: This is used for sampling of the ticks => may need to check this. When we change the number of rows to be smaller than number of machines (less than a pixel per row)
@@ -102,7 +127,10 @@ d3.json('data/' + FILE_NAME).then(data => {
     mainGroup.selectAll('.contourPlot').data(VARIABLES).enter().append("g")
         .attr('class', 'contourPlot').attr('id', (d, i) => `contourPlot${i}`)
         .attr("transform", (d, i) => `translate(0, ${i * height})`);
-
+    //Add labels for the groups
+    mainGroup.selectAll('.contourPlotVariable').data(VARIABLES).enter().append("g")
+        .attr('class', 'contourPlotVariable').attr('id', (d, i) => `contourPlotVariable${i}`)
+        .attr("transform", (d, i) => `translate(0, ${i * height})`).append('text').text(d => d).attr("dy", '1.2em').attr('dx', '0.5em');
     //Display number of machines
     addInfoRow(calculationTbl, [{innerHTML: 'Machines'}, {
         innerHTML: machines.length,
@@ -137,16 +165,23 @@ d3.json('data/' + FILE_NAME).then(data => {
     //Split the data
     for (let i = 0; i < machines.length; i++) {
         //TODO: For alibaba => should check this to reduce sampling time
-        // if (machineTimeObject[machines[i]].length < timeSteps.length) {
-        resampleParts[resampleCounter % maxWorkers].push(machineTimeObject[machines[i]]);
-        resampleCounter++;
-        // }
+        if (FILE_TYPE === 'alibaba') {
+            if (machineTimeObject[machines[i]].length < timeSteps.length) {
+                resampleParts[resampleCounter % maxWorkers].push(machineTimeObject[machines[i]]);
+                resampleCounter++;
+            }
+        } else {
+            //For the other just resample without having to check the condition.
+            resampleParts[resampleCounter % maxWorkers].push(machineTimeObject[machines[i]]);
+            resampleCounter++;
+        }
+
     }
 
     //Start workers
     let resampleResultCounter = 0;
     resampleParts.forEach((part, i) => {
-        startWorker('scripts/workers/resampling_worker.js', {
+        startWorker(resamplingWorkerPath, {
             'timeSteps': timeSteps,
             'part': part
         }, onResamplingResult, i);
@@ -246,7 +281,7 @@ d3.json('data/' + FILE_NAME).then(data => {
         let similarityResultCounter = 0;
         //Now start a worker for each of the part
         similarityParts.forEach((part, i) => {
-            startWorker('scripts/workers/similarity_worker.js', part, onSimilarityResult, i);
+            startWorker(similarityWorkerPath, part, onSimilarityResult, i);
         });
 
         function onSimilarityResult(evt) {
@@ -278,7 +313,7 @@ d3.json('data/' + FILE_NAME).then(data => {
         });
         orderParts.forEach((part, i) => {
             //Build the best order.
-            startWorker('scripts/workers/similarityorder_worker.js', {
+            startWorker(orderWorkerPath, {
                 theVar: VARIABLES[i],
                 machines: orders[i],
                 links: part
@@ -352,7 +387,13 @@ d3.json('data/' + FILE_NAME).then(data => {
             }
 
             let colors = thresholds.map(v => colorSchemes[theVar](v / max));
-            // colors.reverse();
+            if (FILE_TYPE === "solarflares") { //TODO: Make this generalize instead.
+                colors = thresholds.map(v => colorSchemes[theVar](v));//We use the value here since the data for this set already scaled down to 0, 1
+                colors.reverse();
+            } else if (FILE_TYPE === "alibaba") {
+                colors.reverse();
+            }
+
             // let colors = ['#3368FF', '#33F0FF', '#33FF39', '#FFBE33', '#FF3F33'];
             let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
 
@@ -360,7 +401,7 @@ d3.json('data/' + FILE_NAME).then(data => {
             //Keep null so that it is considered as 0 in calculation => so it will bring the absent points together, but convert back to undefined so will not plot it (if not undefined it will plot as 0).
 
             let contours = d3.contours().thresholds(thresholds).size([z[0].length, z.length]).smooth(smooth)(x);
-            debugger;
+
             //This section store the contours for area calculation later-on.
             contours.forEach((ct, i) => {
                     let dt = {
@@ -418,7 +459,7 @@ d3.json('data/' + FILE_NAME).then(data => {
                 if (totalDraws === drawingResultCounter) {
                     //Start calculating from here
                     allContours.forEach((cl, i) => {
-                        startWorker('scripts/workers/area_worker.js', cl, onLayerAreaResult, i);
+                        startWorker(areaWorkerPath, cl, onLayerAreaResult, i);
                     });
                     //Also we only setup the svg mouse move when all the drawings are done
                     setupMouseMove();

@@ -1,4 +1,4 @@
-importScripts('../constants.js');
+importScripts('./constants.js');
 onmessage = function(e){
     let timeSteps = e.data.timeSteps;
     let part = e.data.part;
