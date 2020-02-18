@@ -33,7 +33,7 @@ FILE_TYPE = 'hpcc'
 //     START_DATE = new Date('2019/03/21'),
 //     STEP = 1000 * 60 * 2;
 /**HPCC 5 --- currently used for HPCC dataset**/
-const NUM_OF_NEIGHBORS = 466;
+const NUM_OF_NEIGHBORS = 300;
 const FILE_NAME = 'HPCC_2018_03_21_2min_wholeday.json';
 const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];
 // const VARIABLES = ["CPU1 Temp"];

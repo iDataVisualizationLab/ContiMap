@@ -42,7 +42,7 @@ FILE_TYPE = 'alibaba'
 //     STEP = 1000 * 60 * 2;
 
 /**Alibaba --- currently used for Alibaba dataset**/
-const NUM_OF_NEIGHBORS = 1000;
+const NUM_OF_NEIGHBORS = 200;
 const FILE_NAME = 'albb3600s.json';
 // const FILE_NAME = 'albbcpu1200s.json';
 

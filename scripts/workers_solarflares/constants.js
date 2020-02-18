@@ -86,7 +86,8 @@ FILE_TYPE = 'solarflares'
 // const VARIABLES = ['TOTUSJH', 'TOTUSJZ', 'USFLUX', 'R_VALUE', 'MEANALP', 'MEANJZH'];
 
 // /**Solar flare**/
-const NUM_OF_NEIGHBORS = 999;
+// const NUM_OF_NEIGHBORS = 999;//Total number of machines are 1000
+const NUM_OF_NEIGHBORS = 300;
 const FILE_NAME = 'class_0_sample_9v.json';
 const VARIABLES = ['TOTUSJH', 'TOTUSJZ', 'USFLUX', 'R_VALUE', 'MEANJZH', 'EPSX', 'EPSY', 'TOTPOT', 'EPSZ'];
 /**Solar flare -- currently used**/
