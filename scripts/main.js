@@ -27,7 +27,9 @@ const colorSchemes = {
     'EPSX': d3.interpolateSpectral,
     'EPSY': d3.interpolateSpectral,
     'TOTPOT': d3.interpolateSpectral,
-    'EPSZ': d3.interpolateSpectral
+    'EPSZ': d3.interpolateSpectral,
+    'GENE_FOLD_LOG2': d3.interpolateSpectral,
+    'GENE_FOLD': d3.interpolateSpectral,
 };
 //Info div
 let settingDiv = document.getElementById('settingDiv');
@@ -64,11 +66,11 @@ d3.json('data/' + FILE_NAME).then(data => {
     //Sort the data by time_stamp
     data.sort((a, b) => a[FIELD_TIME_STAMP] - b[FIELD_TIME_STAMP]);
     const timeSteps = Array.from(new Set(data.map(d => d[FIELD_TIME_STAMP])));
-    const machines = Array.from(new Set(data.map(d => ""+d[FIELD_MACHINE_ID])));//Convert to string to use the autocomplete search box.
+    const machines = Array.from(new Set(data.map(d => "" + d[FIELD_MACHINE_ID])));//Convert to string to use the autocomplete search box.
     //Add autocomplete box to search for
     // //This section is to set the autocomplete word
     autocomplete(document.getElementById("theWord"), machines, (theTextField) => {
-
+        //TODO
     });
 
     let orders = [];
@@ -84,6 +86,8 @@ d3.json('data/' + FILE_NAME).then(data => {
         height = machines.length * 2;
     } else if (FILE_TYPE === "solarflares") {
         height = machines.length;
+    } else if (FILE_TYPE === "genes") {
+        height = 6000;
     }
 
 
@@ -618,45 +622,6 @@ function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-/**
- * Returns a new formatter for the given string specifier. The specifier string may contain the following directives:
-
- %a - abbreviated weekday name.*
- %A - full weekday name.*
- %b - abbreviated month name.*
- %B - full month name.*
- %c - the locale’s date and time, such as %x, %X.*
- %d - zero-padded day of the month as a decimal number [01,31].
- %e - space-padded day of the month as a decimal number [ 1,31]; equivalent to %_d.
- %f - microseconds as a decimal number [000000, 999999].
- %H - hour (24-hour clock) as a decimal number [00,23].
- %I - hour (12-hour clock) as a decimal number [01,12].
- %j - day of the year as a decimal number [001,366].
- %m - month as a decimal number [01,12].
- %M - minute as a decimal number [00,59].
- %L - milliseconds as a decimal number [000, 999].
- %p - either AM or PM.*
- %Q - milliseconds since UNIX epoch.
- %s - seconds since UNIX epoch.
- %S - second as a decimal number [00,61].
- %u - Monday-based (ISO 8601) weekday as a decimal number [1,7].
- %U - Sunday-based week of the year as a decimal number [00,53].
- %V - ISO 8601 week of the year as a decimal number [01, 53].
- %w - Sunday-based weekday as a decimal number [0,6].
- %W - Monday-based week of the year as a decimal number [00,53].
- %x - the locale’s date, such as %-m/%-d/%Y.*
- %X - the locale’s time, such as %-I:%M:%S %p.*
- %y - year without century as a decimal number [00,99].
- %Y - year with century as a decimal number.
- %Z - time zone offset, such as -0700, -07:00, -07, or Z.
- %% - a literal percent sign (%).
-
- * @param startDate
- * @param step
- * @param timeStamp
- * @param format
- * @returns {*}
- */
 function timeStampToDate(timeStamp) {
     return d3.timeFormat(FORMAT_STR)(new Date(START_DATE.getTime() + STEP * timeStamp));
 }
