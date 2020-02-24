@@ -30,6 +30,7 @@ const colorSchemes = {
     'EPSZ': d3.interpolateSpectral,
     'GENE_FOLD_LOG2': d3.interpolateSpectral,
     'GENE_FOLD': d3.interpolateSpectral,
+    'GENE_VALUE_NORMALIZED': d3.interpolateSpectral,
 };
 //Info div
 let settingDiv = document.getElementById('settingDiv');
@@ -47,10 +48,13 @@ let startTime = new Date(),
  */
 
 d3.json('data/' + FILE_NAME).then(data => {
+    if (FILE_TYPE === "genes") {
+        //Filter zero base or treatment
+        // data = data.filter(d => d.base_value !== 0 && d.treatment_value !== 0);
+    }
 
     const nestedByMachines = d3.nest().key(d => d[FIELD_MACHINE_ID]).entries(data);
-    //<editor-fold desc="For alibaba only">
-    //TODO: Only filter in case of alibaba
+
     if (FILE_TYPE === "alibaba") {
         //Calculate the max cpu usage
         nestedByMachines.forEach(mc => {
@@ -60,8 +64,6 @@ d3.json('data/' + FILE_NAME).then(data => {
         //Filter the data
         data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
     }
-
-    //</editor-fold>
 
     //Sort the data by time_stamp
     data.sort((a, b) => a[FIELD_TIME_STAMP] - b[FIELD_TIME_STAMP]);
@@ -78,7 +80,7 @@ d3.json('data/' + FILE_NAME).then(data => {
     //Get the size and set the sizes
 
     // width = Math.max(Math.round(window.innerWidth * 1 / 3), timeSteps.length);
-    width = document.getElementById("main-part").getBoundingClientRect().width;
+    width = document.getElementById("main-part").getBoundingClientRect().width - margins.left - margins.right;
     // width = 300;
 
     height = (Math.min(window.innerHeight, machines.length * VARIABLES.length) - timeLineHeight - marginBottom) / (VARIABLES.length); //-10 is for bottom margin.
@@ -87,7 +89,7 @@ d3.json('data/' + FILE_NAME).then(data => {
     } else if (FILE_TYPE === "solarflares") {
         height = machines.length;
     } else if (FILE_TYPE === "genes") {
-        height = 6000;
+        height = machines.length;
     }
 
 
@@ -159,54 +161,52 @@ d3.json('data/' + FILE_NAME).then(data => {
         styles: [{key: 'textAlign', value: 'right'}]
     }]);
 
-    //Resample the data.
-    let resampleParts = [];
-    for (let i = 0; i < maxWorkers; i++) {
-        resampleParts.push([]);
-    }
+    //TODO: This section skip resampling since heavy data sending back and forth data to worker is slow.
+    if (FILE_TYPE === "genes" || FILE_TYPE === "solarflares") {
+        onCompleteResampling(machineTimeObject);
+    } else {
+        //Resample the data.
+        let resampleParts = [];
+        for (let i = 0; i < maxWorkers; i++) {
+            resampleParts.push([]);
+        }
 
-    let resampleCounter = 0;
-    //Split the data
-    for (let i = 0; i < machines.length; i++) {
-        //TODO: For alibaba => should check this to reduce sampling time
-        if (FILE_TYPE === 'alibaba') {
-            if (machineTimeObject[machines[i]].length < timeSteps.length) {
-                resampleParts[resampleCounter % maxWorkers].push(machineTimeObject[machines[i]]);
-                resampleCounter++;
-            }
-        } else {
+        let resampleCounter = 0;
+        //Split the data
+        for (let i = 0; i < machines.length; i++) {
             //For the other just resample without having to check the condition.
             resampleParts[resampleCounter % maxWorkers].push(machineTimeObject[machines[i]]);
             resampleCounter++;
         }
 
-    }
-
-    //Start workers
-    let resampleResultCounter = 0;
-    resampleParts.forEach((part, i) => {
-        startWorker(resamplingWorkerPath, {
-            'timeSteps': timeSteps,
-            'part': part
-        }, onResamplingResult, i);
-    });
-
-    function onResamplingResult(results) {
-        resampleResultCounter += 1;
-        results.forEach(machineTs => {
-            machineTimeObject[machineTs[0][FIELD_MACHINE_ID]] = machineTs;
+        //Start workers
+        let resampleResultCounter = 0;
+        resampleParts.forEach((part, i) => {
+            startWorker(resamplingWorkerPath, {
+                'timeSteps': timeSteps,
+                'part': part
+            }, onResamplingResult, i);
         });
-        if (resampleResultCounter === resampleParts.length) {
-            resetWorkers();
-            onCompleteResampling(machineTimeObject);
-            //Done re-sampling
-            doneResampling = new Date();
-            addInfoRow(calculationTbl, [{innerHTML: 'Done resampling'}, {
-                innerHTML: numberWithCommas(doneResampling - donePreprocess) + 'ms',
-                styles: [{key: 'textAlign', value: 'right'}]
-            }]);
+
+        function onResamplingResult(results) {
+            resampleResultCounter += 1;
+            results.forEach(machineTs => {
+                machineTimeObject[machineTs[0][FIELD_MACHINE_ID]] = machineTs;
+            });
+            if (resampleResultCounter === resampleParts.length) {
+                resetWorkers();
+                onCompleteResampling(machineTimeObject);
+                //Done re-sampling
+                doneResampling = new Date();
+                addInfoRow(calculationTbl, [{innerHTML: 'Done resampling'}, {
+                    innerHTML: numberWithCommas(doneResampling - donePreprocess) + 'ms',
+                    styles: [{key: 'textAlign', value: 'right'}]
+                }]);
+            }
         }
+
     }
+
 
     function onCompleteResampling(machineTimeObject) {
         //Process all the rSqared
@@ -217,44 +217,53 @@ d3.json('data/' + FILE_NAME).then(data => {
         }
         let similarityCounter = 0;
 
-        // /**This is one to all others**/
-        // orders = VARIABLES.map(()=> machines);//For this case the order is just the machines
-        // // //<editor-fold desc="This is one to all others">
-        // for (let i = 0; i < machines.length - 1; i++) {
-        //     for (let j = i + 1; j < machines.length; j++) {
-        //         let keyI = machines[i];
-        //         let keyJ = machines[j];
-        //         let valuesI = machineTimeObject[keyI];
-        //         let valuesJ = machineTimeObject[keyJ];
-        //         let sd = {x1: valuesI, x2: valuesJ};
-        //         similarityParts[similarityCounter % maxWorkers].push(sd);
-        //         similarityCounter++;
-        //     }
-        // }
-        // // //</editor-fold>
-        // /**End of one to all others section*/
-
         /**This is one to n others**/
         //<editor-fold desc="This is one to n others">
-
         //Add average value to the machineTimeObj
         orders = VARIABLES.map(v => {
             //Avg variable name
             let avgV = 'avg' + v;
             //Add average value
+            debugger
             d3.keys(machineTimeObject).forEach(mc => {
-                machineTimeObject[mc][avgV] = d3.mean(machineTimeObject[mc].map(d => d[v]));
+                if (typeof ORDER_AVERAGE_STEPS !== "undefined" && ORDER_AVERAGE_STEPS.length > 0) {
+                    let theStepValues = ORDER_AVERAGE_STEPS.map(step => {
+                        return machineTimeObject[mc][step][v];
+                    });
+                    machineTimeObject[mc][avgV] = d3.mean(theStepValues);
+                } else {
+                    machineTimeObject[mc][avgV] = d3.mean(machineTimeObject[mc].map(d => d[v]));
+                }
             });
             //Copy
             let vOrder = machines.slice();
-            //Sort by average
-            if (!HEAT_MAP) {
-                vOrder.sort();
-            } else {
-                vOrder.sort((a, b) => machineTimeObject[a][avgV] - machineTimeObject[b][avgV]);
-            }
+            // //TODO: These lines are old code, we always want to order by average value in all cases so just do this.
+            // if (!HEAT_MAP) {
+            //     vOrder.sort();//Sort alphabetically only
+            // } else {//Sort by the average value
+            //     vOrder.sort((a, b) => machineTimeObject[a][avgV] - machineTimeObject[b][avgV]);
+            // }
+            vOrder.sort((a, b) => machineTimeObject[a][avgV] - machineTimeObject[b][avgV]);
             return vOrder;
         });
+
+        if (typeof ORDER_AVERAGE_ONLY !== "undefined" && ORDER_AVERAGE_ONLY) {
+            //Skip calculation for links to be calculated
+            //Skip similarity calculation
+            //Skip ordering
+            let totalDraws = VARIABLES.length;
+            let drawingResultCounter = 0;
+            orders.forEach((order, i) => {
+                let orderResults = {
+                    variable: VARIABLES[i],
+                    order: order,
+                }
+                processOrder(orderResults, drawingResultCounter, totalDraws);
+            });
+            return;//Skip all the rest
+        }
+
+
         //Get the links to be calculated
         let linksToBeCalculated = {};
         VARIABLES.forEach((v, i) => {
@@ -305,6 +314,150 @@ d3.json('data/' + FILE_NAME).then(data => {
 
     }
 
+    function processOrder(orderResults, drawingResultCounter, totalDraws) {
+        let theVar = orderResults.variable;
+        let startDrawing = new Date();
+
+        let theGroup = d3.select(`#contourPlot${VARIABLES.indexOf(theVar)}`);
+        let order = orderResults.order;
+        // // TODO: Shuffle => to generate graphics for the paper only.
+        // function shuffle(array) {
+        //     array.sort(() => Math.random() - 0.5);
+        // }
+        // shuffle(order);
+
+        //Building the data
+        let y = order;
+        let z = [];
+        order.forEach(machine => {
+            z.push(machineTimeObject[machine].map(st => st[theVar]));
+        });
+        let flatZ = z.flat();
+        let x = flatZ.map(d => (d === NULL_VALUE) ? undefined : d);
+        let min = d3.min(x);
+        let max = d3.max(x);
+        let numOfRanges = 5;
+        let range = (max - min) / numOfRanges;
+        // //TODO: This is specific for HPCC.
+        // //["CPU1 Temp", "Fan1 speed", "Power consumption"]
+        // //CPU usage [3 corresponds to 0 and 98 corresponds to 1.0] => Celcius
+        // //Fan speed min max [1050 corresponds to 0 and 17850 corresponds to 1.0] => rpm
+        // //Power consumption  [0 corresponds to , 200] => Watts
+        //
+        // let thesholdRange = [];
+        // if (theVar === "CPU1 Temp") {
+        //     thesholdRange = [0, 85];
+        // } else if (theVar === "Fan1 speed") {
+        //     thesholdRange = [1050, 14000];
+        // } else if (theVar === "Power consumption") {
+        //     thesholdRange = [0, 110];
+        // }
+        // let percents = [0, .25, .5, .75, 1.0];
+        // let thresholScale = d3.scaleLinear().domain([0, 1]).range(thesholdRange).clamp(false);
+        // let thresholds = percents.map(p => thresholScale(p));
+
+
+        //TODO: Enable the following lines for other cases.
+        let thresholds = [];
+        for (let i = 0; i < numOfRanges; i++) {
+            thresholds.push(min + i * range);
+        }
+
+        let colors = thresholds.map(v => colorSchemes[theVar](v / max));
+        if (FILE_TYPE === "solarflares") { //TODO: Make this generalize instead.
+            colors = thresholds.map(v => colorSchemes[theVar](v));//We use the value here since the data for this set already scaled down to 0, 1
+            colors.reverse();
+        } else if (FILE_TYPE === "alibaba" || FILE_TYPE === "genes") {
+            colors.reverse();
+        }
+
+        // let colors = ['#3368FF', '#33F0FF', '#33FF39', '#FFBE33', '#FF3F33'];
+        let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
+
+        allColorScales[theVar] = colorScale;
+        //Keep null so that it is considered as 0 in calculation => so it will bring the absent points together, but convert back to undefined so will not plot it (if not undefined it will plot as 0).
+
+        let contours = d3.contours().thresholds(thresholds).size([z[0].length, z.length]).smooth(smooth)(x);
+
+        //This section store the contours for area calculation later-on.
+        contours.forEach((ct, i) => {
+                let dt = {
+                    variable: theVar,
+                    layerIndex: i,
+                    coordinates: ct.coordinates,
+                    layerValue: ct.value
+                }
+                allContours.push(dt);
+            }
+        );
+        let scaleX = width / z[0].length;
+        let scaleY = height / z.length;
+
+        let contourData = {
+            contours: contours,
+            scaleX: scaleX,
+            scaleY: scaleY,
+            colorScale: colorScale,
+            variable: theVar,
+            y: y
+        };
+        //Save it to use later when mouseover.
+        theGroup.node().contourData = contourData;
+        if (!HEAT_MAP) {
+            plotContour(theGroup, contourData, width, height, onDrawingCompleted);
+        } else {
+            let heatmapData = {
+                timeSteps: timeSteps,
+                machines: y,
+                data: z,
+                colorScale: colorScale,
+                thresholds: thresholds
+            };
+            plotHeatmap(theGroup, heatmapData, width, height, () => {
+            });
+        }
+
+
+        let doneDrawing = new Date();
+        //Hide the loader
+        hideLoader();
+        addInfoRow(calculationTbl, [{innerHTML: `Done drawing ${theVar}`}, {
+            innerHTML: numberWithCommas(doneDrawing - startDrawing) + 'ms',
+            styles: [{key: 'textAlign', value: 'right'}]
+        }]);
+
+        function onDrawingCompleted(theVar) {
+            //Done all drawing, start processing the contour area calculation.
+            let totalPolygonLayerCount = allContours.length;
+            let polygonLayerResultCounter = 0;
+            let allContourAreas = [];
+            if (totalDraws === drawingResultCounter + 1) {//Still + 1 here in the local (since the global is 1 step late)
+                //Start calculating from here
+                allContours.forEach((cl, i) => {
+                    startWorker(areaWorkerPath, cl, onLayerAreaResult, i);
+                });
+                //Also we only setup the svg mouse move when all the drawings are done
+                setupMouseMove();
+            }
+
+            /**
+             *
+             * @param result result will have this format {variable: theVar, layerIndex: layerIndex, 'areas': results, layerValue: layerValue}
+             */
+            function onLayerAreaResult(result) {
+                allContourAreas.push(result);
+                polygonLayerResultCounter += 1;
+                if (polygonLayerResultCounter === totalPolygonLayerCount) {
+                    resetWorkers();
+                    //Display contour info area.
+                    displayContourAreasInfo(allContourAreas);
+                    //After all, process the sticky now here (since once done display we will have the offset information.
+                    setupScrollStickyTimeLine();
+                }
+            }
+        }
+    }
+
     function onCompleteSimilarityCal(similarityResults) {
         let orderParts = VARIABLES.map((theVar) => {
             return similarityResults.map(similarity => {
@@ -315,6 +468,7 @@ d3.json('data/' + FILE_NAME).then(data => {
                 }
             });
         });
+
         orderParts.forEach((part, i) => {
             //Build the best order.
             startWorker(orderWorkerPath, {
@@ -323,13 +477,13 @@ d3.json('data/' + FILE_NAME).then(data => {
                 links: part
             }, onOrderResult, i);
         });
-        let orderingResultCounter = 0;
 
+        let orderingResultCounter = 0;
         let totalDraws = VARIABLES.length;
         let drawingResultCounter = 0;
 
         function onOrderResult(orderResults) {
-
+            debugger
             orderingResultCounter += 1;
             if (orderingResultCounter === orderParts.length) {
                 doneOrdering = new Date();
@@ -343,148 +497,8 @@ d3.json('data/' + FILE_NAME).then(data => {
         }
 
         function processOrderResults(orderResults) {
-            let theVar = orderResults.variable;
-            let startDrawing = new Date();
-            let theGroup = d3.select(`#contourPlot${VARIABLES.indexOf(theVar)}`);
-            let order = orderResults.order;
-            // //Shuffle => to generate graphics for the paper only.
-            // function shuffle(array) {
-            //     array.sort(() => Math.random() - 0.5);
-            // }
-            // shuffle(order);
-
-            //Building the data
-            let y = order;
-            let z = [];
-            order.forEach(machine => {
-                z.push(machineTimeObject[machine].map(st => st[theVar]));
-            });
-            let flatZ = z.flat();
-            let x = flatZ.map(d => (d === NULL_VALUE) ? undefined : d);
-            let min = d3.min(x);
-            let max = d3.max(x);
-            let numOfRanges = 5;
-            let range = (max - min) / numOfRanges;
-            // //TODO: This is specific for HPCC.
-            // //["CPU1 Temp", "Fan1 speed", "Power consumption"]
-            // //CPU usage [3 corresponds to 0 and 98 corresponds to 1.0] => Celcius
-            // //Fan speed min max [1050 corresponds to 0 and 17850 corresponds to 1.0] => rpm
-            // //Power consumption  [0 corresponds to , 200] => Watts
-            //
-            // let thesholdRange = [];
-            // if (theVar === "CPU1 Temp") {
-            //     thesholdRange = [0, 85];
-            // } else if (theVar === "Fan1 speed") {
-            //     thesholdRange = [1050, 14000];
-            // } else if (theVar === "Power consumption") {
-            //     thesholdRange = [0, 110];
-            // }
-            // let percents = [0, .25, .5, .75, 1.0];
-            // let thresholScale = d3.scaleLinear().domain([0, 1]).range(thesholdRange).clamp(false);
-            // let thresholds = percents.map(p => thresholScale(p));
-
-
-            //TODO: Enable the following lines for other cases.
-            let thresholds = [];
-            for (let i = 0; i < numOfRanges; i++) {
-                thresholds.push(min + i * range);
-            }
-
-            let colors = thresholds.map(v => colorSchemes[theVar](v / max));
-            if (FILE_TYPE === "solarflares") { //TODO: Make this generalize instead.
-                colors = thresholds.map(v => colorSchemes[theVar](v));//We use the value here since the data for this set already scaled down to 0, 1
-                colors.reverse();
-            } else if (FILE_TYPE === "alibaba") {
-                colors.reverse();
-            }
-
-            // let colors = ['#3368FF', '#33F0FF', '#33FF39', '#FFBE33', '#FF3F33'];
-            let colorScale = d3.scaleOrdinal().domain(thresholds).range(colors);
-
-            allColorScales[theVar] = colorScale;
-            //Keep null so that it is considered as 0 in calculation => so it will bring the absent points together, but convert back to undefined so will not plot it (if not undefined it will plot as 0).
-
-            let contours = d3.contours().thresholds(thresholds).size([z[0].length, z.length]).smooth(smooth)(x);
-
-            //This section store the contours for area calculation later-on.
-            contours.forEach((ct, i) => {
-                    let dt = {
-                        variable: theVar,
-                        layerIndex: i,
-                        coordinates: ct.coordinates,
-                        layerValue: ct.value
-                    }
-                    allContours.push(dt);
-                }
-            );
-            let scaleX = width / z[0].length;
-            let scaleY = height / z.length;
-
-            let contourData = {
-                contours: contours,
-                scaleX: scaleX,
-                scaleY: scaleY,
-                colorScale: colorScale,
-                variable: theVar,
-                y: y
-            };
-            //Save it to use later when mouseover.
-            theGroup.node().contourData = contourData;
-            if (!HEAT_MAP) {
-                plotContour(theGroup, contourData, width, height, onDrawingCompleted);
-            } else {
-                let heatmapData = {
-                    timeSteps: timeSteps,
-                    machines: y,
-                    data: z,
-                    colorScale: colorScale,
-                    thresholds: thresholds
-                };
-                plotHeatmap(theGroup, heatmapData, width, height, () => {
-                });
-            }
-
-
-            let doneDrawing = new Date();
-            //Hide the loader
-            hideLoader();
-            addInfoRow(calculationTbl, [{innerHTML: `Done drawing ${theVar}`}, {
-                innerHTML: numberWithCommas(doneDrawing - startDrawing) + 'ms',
-                styles: [{key: 'textAlign', value: 'right'}]
-            }]);
-
-            function onDrawingCompleted(theVar) {
-
-                drawingResultCounter += 1;
-                //Done all drawing, start processing the contour area calculation.
-                let totalPolygonLayerCount = allContours.length;
-                let polygonLayerResultCounter = 0;
-                let allContourAreas = [];
-                if (totalDraws === drawingResultCounter) {
-                    //Start calculating from here
-                    allContours.forEach((cl, i) => {
-                        startWorker(areaWorkerPath, cl, onLayerAreaResult, i);
-                    });
-                    //Also we only setup the svg mouse move when all the drawings are done
-                    setupMouseMove();
-                }
-
-                /**
-                 *
-                 * @param result result will have this format {variable: theVar, layerIndex: layerIndex, 'areas': results, layerValue: layerValue}
-                 */
-                function onLayerAreaResult(result) {
-                    allContourAreas.push(result);
-                    polygonLayerResultCounter += 1;
-                    if (polygonLayerResultCounter === totalPolygonLayerCount) {
-                        resetWorkers();
-                        //Display contour info area.
-                        displayContourAreasInfo(allContourAreas);
-                        //After all, process the sticky now here (since once done display we will have the offset information.
-                        setupScrollStickyTimeLine();
-                    }
-                }
-            }
+            processOrder(orderResults, drawingResultCounter, totalDraws);
+            drawingResultCounter += 1;
         }
     }
 

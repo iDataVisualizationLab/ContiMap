@@ -5,7 +5,7 @@ const NULL_VALUE = null;
 
 const FIELD_MACHINE_ID = 'machine_id';
 const FIELD_TIME_STAMP = 'time_stamp';
-FILE_TYPE = 'hpcc'
+const FILE_TYPE = 'hpcc'
 /**HPCC**/
 // const FILE_NAME = 'HPCC_21Mar2019_5min.json';
 // // const VARIABLES = ["CPU1 Temp", "Fan1 speed", "Power consumption"];

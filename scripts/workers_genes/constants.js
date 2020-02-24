@@ -4,12 +4,18 @@ const NULL_VALUE = null;
 //Contains some constants for the whole program
 const FIELD_MACHINE_ID = 'gene_id';
 const FIELD_TIME_STAMP = 'treatment_counter';
-FILE_TYPE = 'genes'
+const FILE_TYPE = 'genes';
+const ORDER_AVERAGE_ONLY = true;
+const ORDER_AVERAGE_STEPS = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 
-const NUM_OF_NEIGHBORS = 3;
-const FILE_NAME = 'processed_gene_data.json';
-const VARIABLES = ['GENE_FOLD_LOG2'];
+// const NUM_OF_NEIGHBORS = 10;
+// const FILE_NAME = 'processed_gene_data.json';
+// const VARIABLES = ['GENE_FOLD'];
+// const VARIABLES = ['GENE_FOLD_LOG2'];
 
+const NUM_OF_NEIGHBORS = 50;
+const FILE_NAME = 'processed_gene_data_normalized.json';
+const VARIABLES = ['GENE_VALUE_NORMALIZED'];
 
 /**Configuration**/
 const oneWay = true;
