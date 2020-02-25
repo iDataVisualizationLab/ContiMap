@@ -1,4 +1,4 @@
-const HEAT_MAP = false;
+const HEAT_MAP = true;
 
 const NULL_VALUE = null;
 //Contains some constants for the whole program
@@ -108,6 +108,7 @@ let pixelsPerColumn;
 let pixelsPerRow;
 
 /**Fisheye**/
+let fisheyeEnabled = true;
 let fisheyeX;
 let fisheyeY;
 /**Contours**/

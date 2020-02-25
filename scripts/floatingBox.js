@@ -13,7 +13,7 @@ function closeFloatingBox(theButton, theBox) {
         display: 'none',
         'z-index': 0
     });
-    if(theButton){
+    if (theButton) {
         $("#" + theButton).fadeTo(1000, 1.0);
     }
 }
@@ -51,5 +51,5 @@ $(document).ready(() => {
     });
 });
 
-d3.select("#configurationContainer").style("left", (window.innerWidth*2/3 + margins.left + margins.right + 30) + "px").style("top", timeLineHeight + "px").style("opacity", 0);//+10 is for the default top margin
-d3.select("#btnConfiguration").style("top", 0 + "px").style("opacity", "1");
+d3.select("#configurationContainer").style("left", (window.innerWidth * 2 / 3 + margins.left + margins.right + 30) + "px").style("top", (timeLineHeight + 100) + "px").style("opacity", 0);//+10 is for the default top margin
+d3.select("#btnConfiguration").style("top", 100 + "px").style("opacity", "1");

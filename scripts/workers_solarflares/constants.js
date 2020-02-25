@@ -32,6 +32,7 @@ let pixelsPerColumn;
 let pixelsPerRow;
 
 /**Fisheye**/
+let fisheyeEnabled = true;
 let fisheyeX;
 let fisheyeY;
 /**Contours**/

@@ -4,10 +4,10 @@
  */
 function maximumPath(machines, links) {
     // Order the weights by ascending order.
-    if(HEAT_MAP){
-        d3.shuffle(machines);
-        return machines;
-    }
+    // if(HEAT_MAP){
+    //     d3.shuffle(machines);
+    //     return machines;
+    // }
     if(NUM_OF_NEIGHBORS === 1){
         return machines;
     }

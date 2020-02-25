@@ -67,10 +67,29 @@ function scale(scaleX, scaleY, fisheyeX, fisheyeY) {
     });
 }
 
-function drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, fisheyeX) {
-    let xScale = d3.scaleLinear().domain(d3.extent(timeSteps)).range([0, timeLineWidth - margins.left - margins.right]);
+function drawTimeLine(timeSteps, settings) {
+    let timeLineWidth = settings.timeLineWidth,
+        timeLineHeight = settings.timeLineHeight,
+        fisheyeX = settings.fisheyeX,
+        tickLabelFormat = settings.tickLabelFormat,
+        minDistance = settings.minDistance,
+        textAnchor = settings.textAnchor,
+        labelMarginLeft = settings.labelMarginLeft,
+        labelMarginBottom = settings.labelMarginBottom;
+
+    if (typeof textAnchor === "undefined") {
+        textAnchor = "middle";
+    }
+    if (typeof labelMarginLeft === "undefined") {
+        labelMarginLeft = 0;
+    }
+    if (typeof labelMarginBottom === "undefined") {
+        labelMarginBottom = 0;
+    }
+
+    let extent = d3.extent(timeSteps);
+    let xScale = d3.scaleLinear().domain([extent[0], extent[1] + 1]).range([0, timeLineWidth - margins.left - margins.right]);
     let timeStepData = [];
-    let minDistance = 60;
     let prevX = 0;
     let x;
     //Todo: We may need to spread from the center to two other ways=> since using this may not guarantee the one in the current mouse is displayed.
@@ -86,12 +105,13 @@ function drawTimeLine(timeSteps, timeLineWidth, timeLineHeight, fisheyeX) {
     let enterGroups = tickSelection.enter().append('g').attr('class', 'tickG');
     enterGroups.append('line').attr('stroke', 'black').attr("stroke-width", 1).attr('y2', -9);
     enterGroups.append('text').text(d => {
-        if(typeof (START_DATE) === 'undefined' || typeof (FORMAT_STR)==='undefined' || typeof (STEP) === 'undefined'){
+        if (tickLabelFormat) {
+            return tickLabelFormat(d);
+        } else {
             return d.tick;
-        }else{
-            return timeStampToDate(d.tick);
         }
-    }).attr("text-anchor", 'middle').attr('y', '-1em');
+
+    }).attr("text-anchor", textAnchor).attr('y', '-1em').attr("transform", `translate(${labelMarginLeft}, ${-labelMarginBottom})`);
     tickSelection.exit().remove();
     //Merge then Update
     tickSelection.merge(enterGroups).attr("transform", d => `translate(${d.x}, 0)`);
