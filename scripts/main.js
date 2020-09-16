@@ -59,7 +59,7 @@ let timeLineSettings = {
     minDistance: 60,
 };
 
-function drawHeatMap(div, data, settings){
+function drawHeatMap(div, data, settings) {
 
 }
 
@@ -118,6 +118,7 @@ async function main() {
             nestedByMachines.forEach(mc => {
                 mc.values.max_cpu_util_percent = d3.max(mc.values.map(d => d[VARIABLES[0]]));
             });
+            //TODO: Should do this filer out currently disable for time measurement
             let filteredOutMachines = nestedByMachines.filter(m => m.values.max_cpu_util_percent <= 60).map(m => m.key);
             //Filter the data
             data = data.filter(d => filteredOutMachines.indexOf(d[FIELD_MACHINE_ID]) < 0);
@@ -481,6 +482,9 @@ async function main() {
                 styles: [{key: 'textAlign', value: 'right'}]
             }]);
 
+            //After all, process the sticky now here (since once done display we will have the offset information.
+            setupScrollStickyTimeLine();
+
             function onDrawingCompleted(theVar) {
                 //Done all drawing, start processing the contour area calculation.
                 let totalPolygonLayerCount = allContours.length;
@@ -508,8 +512,6 @@ async function main() {
                         resetWorkers();
                         //Display contour info area.
                         displayContourAreasInfo(allContourAreas);
-                        //After all, process the sticky now here (since once done display we will have the offset information.
-                        setupScrollStickyTimeLine();
                     }
                 }
             }
